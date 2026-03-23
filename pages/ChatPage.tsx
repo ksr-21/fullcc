@@ -1,0 +1,454 @@
+import React, { useState, useMemo, useRef } from 'react';
+import type { User, Conversation, Course, Message } from '../types';
+import Header from '../components/Header';
+import Avatar from '../components/Avatar';
+import ChatPanel from '../components/ChatPanel';
+import NewConversationModal from '../components/NewConversationModal';
+import BottomNavBar from '../components/BottomNavBar';
+import { auth } from '../firebase';
+import { 
+    MessageIcon, UsersIcon, SearchIcon, PlusIcon, TrashIcon, EditIcon, CloseIcon, ChevronRightIcon, BookmarkIcon, BookmarkIconSolid
+} from '../components/Icons';
+
+interface ChatPageProps {
+  currentUser: User;
+  users: { [key: string]: User };
+  conversations: Conversation[];
+  courses: Course[];
+  onSendMessage: (conversationId: string, text: string) => void;
+  onSendCourseMessage: (courseId: string, text: string) => void;
+  onDeleteMessagesForEveryone: (conversationId: string, messageIds: string[]) => void;
+  onDeleteMessagesForSelf: (conversationId: string, messageIds: string[]) => void;
+  onDeleteConversations: (conversationIds: string[]) => void;
+  onCreateOrOpenConversation: (otherUserId: string) => Promise<string>;
+  onNavigate: (path: string) => void;
+  currentPath: string;
+}
+
+const formatTimestampForChatList = (timestamp: number) => {
+    const messageDate = new Date(timestamp);
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const startOfYesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+
+    if (messageDate >= startOfToday) {
+        return messageDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+    } else if (messageDate >= startOfYesterday) {
+        return 'Yesterday';
+    } else {
+        return messageDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
+};
+
+type CourseChat = {
+    id: string;
+    kind: 'course';
+    courseId: string;
+    name: string;
+    isGroupChat: true;
+    participantIds: string[];
+    messages: Message[];
+};
+
+const ChatPage: React.FC<ChatPageProps> = (props) => {
+    const { currentUser, users, conversations, courses, onSendMessage, onSendCourseMessage, onDeleteMessagesForEveryone, onDeleteMessagesForSelf, onDeleteConversations, onCreateOrOpenConversation, onNavigate, currentPath } = props;
+
+    const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
+    const [isNewConvoModalOpen, setIsNewConvoModalOpen] = useState(false);
+    const [activeFilter, setActiveFilter] = useState<'All' | 'Groups' | 'Direct'>('All');
+    const [searchQuery, setSearchQuery] = useState('');
+    const [isEditMode, setIsEditMode] = useState(false);
+    const [pinnedChatIds, setPinnedChatIds] = useState<string[]>(() => {
+        const raw = localStorage.getItem(`pinned_chats_${currentUser.id}`);
+        return raw ? JSON.parse(raw) : [];
+    });
+
+    // Long press refs
+    const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const isLongPressRef = useRef(false);
+
+    const handleLogout = async () => {
+        await auth.signOut();
+        onNavigate('#/');
+    };
+
+    const handleSelectUser = async (userId: string) => {
+        const convoId = await onCreateOrOpenConversation(userId); 
+        setSelectedConversationId(convoId);
+        setIsNewConvoModalOpen(false);
+    };
+
+    const handleDeleteConversation = (e: React.MouseEvent, id: string) => {
+        e.stopPropagation();
+        if (window.confirm('Are you sure you want to delete this conversation? This cannot be undone.')) {
+            onDeleteConversations([id]);
+            if (selectedConversationId === id) setSelectedConversationId(null);
+        }
+    };
+
+    // Long Press Handlers for List Item
+    const handleLongPressStart = (id: string) => {
+        isLongPressRef.current = false;
+        longPressTimerRef.current = setTimeout(() => {
+            isLongPressRef.current = true;
+            if (navigator.vibrate) navigator.vibrate(50); 
+            if (window.confirm('Delete this conversation?')) {
+                onDeleteConversations([id]);
+                if (selectedConversationId === id) setSelectedConversationId(null);
+            }
+        }, 600);
+    };
+
+    const handleLongPressEnd = () => {
+        if (longPressTimerRef.current) {
+            clearTimeout(longPressTimerRef.current);
+        }
+    };
+
+    const handleConvoClick = (id: string) => {
+        if (isLongPressRef.current) return;
+        setSelectedConversationId(id);
+    };
+
+    const courseChats: CourseChat[] = useMemo(() => {
+        const hasAccess = (course: Course) => {
+            if (currentUser.tag === 'Director') return true;
+            if (currentUser.tag === 'HOD/Dean' && currentUser.department === course.department) return true;
+            if (course.facultyId === currentUser.id) return true;
+            if (course.students?.includes(currentUser.id)) return true;
+            return false;
+        };
+
+        return courses
+            .filter(c => c.collegeId === currentUser.collegeId)
+            .filter(c => hasAccess(c))
+            .map((course) => ({
+                id: `course:${course.id}`,
+                kind: 'course' as const,
+                courseId: course.id,
+                name: `Course Feed · ${course.subject} (Y${course.year}${course.division ? course.division : ''})`,
+                isGroupChat: true as const,
+                participantIds: [
+                    course.facultyId,
+                    ...(course.students || [])
+                ].filter(Boolean),
+                messages: course.messages || []
+            }));
+    }, [courses, currentUser.collegeId, currentUser.department, currentUser.id, currentUser.tag]);
+
+    const allChatItems = useMemo(() => {
+        return [...conversations, ...courseChats];
+    }, [conversations, courseChats]);
+
+    const filteredConversations = useMemo(() => {
+        let filtered = allChatItems;
+
+        if (activeFilter === 'Groups') {
+            filtered = filtered.filter(c => c.isGroupChat);
+        } else if (activeFilter === 'Direct') {
+            filtered = filtered.filter(c => !c.isGroupChat);
+        }
+        
+        if (searchQuery.trim()) {
+            const lowerQuery = searchQuery.toLowerCase();
+            filtered = filtered.filter(c => {
+                if (c.isGroupChat) {
+                    return (c as any).name?.toLowerCase().includes(lowerQuery);
+                } else {
+                    const otherId = c.participantIds.find(id => id !== currentUser.id);
+                    const user = otherId ? users[otherId] : null;
+                    return user && (user.name.toLowerCase().includes(lowerQuery) || user.department.toLowerCase().includes(lowerQuery));
+                }
+            });
+        }
+
+        return filtered.sort((a, b) => {
+            const lastMessageA = a.messages[a.messages.length - 1]?.timestamp || 0;
+            const lastMessageB = b.messages[b.messages.length - 1]?.timestamp || 0;
+            return lastMessageB - lastMessageA;
+        });
+    }, [allChatItems, activeFilter, searchQuery, users, currentUser]);
+
+    const pinnedChats = useMemo(() => {
+        const pinnedSet = new Set(pinnedChatIds);
+        return filteredConversations.filter(c => pinnedSet.has(c.id));
+    }, [filteredConversations, pinnedChatIds]);
+
+    const unpinnedChats = useMemo(() => {
+        const pinnedSet = new Set(pinnedChatIds);
+        return filteredConversations.filter(c => !pinnedSet.has(c.id));
+    }, [filteredConversations, pinnedChatIds]);
+
+    const groupChats = useMemo(() => unpinnedChats.filter(c => c.isGroupChat), [unpinnedChats]);
+    const directChats = useMemo(() => unpinnedChats.filter(c => !c.isGroupChat), [unpinnedChats]);
+
+    const selectedConversation = useMemo(() => {
+        return allChatItems.find(c => c.id === selectedConversationId);
+    }, [allChatItems, selectedConversationId]);
+
+    const togglePinChat = (id: string) => {
+        setPinnedChatIds(prev => {
+            const exists = prev.includes(id);
+            let next: string[];
+            if (exists) {
+                next = prev.filter(pid => pid !== id);
+            } else {
+                if (prev.length >= 7) {
+                    alert('You can pin up to 7 chats.');
+                    return prev;
+                }
+                next = [id, ...prev];
+            }
+            localStorage.setItem(`pinned_chats_${currentUser.id}`, JSON.stringify(next));
+            return next;
+        });
+    };
+
+    const renderChatRow = (convo: Conversation | CourseChat, isPinned: boolean) => {
+        const isGroup = convo.isGroupChat;
+        const otherParticipantId = !isGroup ? convo.participantIds.find(id => id !== currentUser.id) : null;
+        const otherUser = otherParticipantId ? users[otherParticipantId] : null;
+        const lastMessage = convo.messages.filter(m => !m.deletedFor?.includes(currentUser.id)).pop();
+        const isActive = selectedConversationId === convo.id;
+        const name = isGroup ? (convo as any).name : otherUser?.name;
+        const isCourseChat = (convo as any).kind === 'course';
+        const canDeleteConvo = !isCourseChat && !isGroup;
+
+        if (!name) return null;
+
+        return (
+            <div 
+                key={convo.id} 
+                onClick={() => handleConvoClick(convo.id)}
+                onMouseDown={() => handleLongPressStart(convo.id)}
+                onMouseUp={handleLongPressEnd}
+                onMouseLeave={handleLongPressEnd}
+                onTouchStart={() => handleLongPressStart(convo.id)}
+                onTouchEnd={handleLongPressEnd}
+                className={`group relative flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all duration-200 border select-none ${
+                    isActive 
+                    ? 'bg-primary/10 border-primary/20' 
+                    : 'bg-card border-transparent hover:bg-muted hover:border-border/50'
+                }`}
+            >
+                <div className="relative flex-shrink-0">
+                    {isGroup ? (
+                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center text-white shadow-sm">
+                            <UsersIcon className="w-6 h-6"/>
+                        </div>
+                    ) : (
+                        <Avatar src={otherUser?.avatarUrl} name={name} size="lg" className="w-12 h-12 shadow-sm ring-1 ring-border" />
+                    )}
+                </div>
+                
+                <div className="flex-1 min-w-0 flex flex-col justify-center">
+                    <div className="flex justify-between items-baseline mb-0.5">
+                        <h4 className={`text-sm font-bold truncate ${isActive ? 'text-primary' : 'text-foreground'}`}>
+                            {name}
+                        </h4>
+                        {lastMessage && (
+                            <span className="text-[10px] text-muted-foreground flex-shrink-0 ml-2 font-medium opacity-70">
+                                {formatTimestampForChatList(lastMessage.timestamp)}
+                            </span>
+                        )}
+                    </div>
+                    <div className="flex justify-between items-center">
+                        <p className={`text-xs truncate pr-4 flex-1 ${isActive ? 'text-foreground/80' : 'text-muted-foreground'}`}>
+                            {lastMessage ? (
+                                <>
+                                    {lastMessage.senderId === currentUser.id && <span className="font-bold mr-1">You:</span>}
+                                    {lastMessage.text}
+                                </>
+                            ) : <span className="italic opacity-50">Start chatting</span>}
+                        </p>
+                    </div>
+                </div>
+
+                <button
+                    onClick={(e) => { e.stopPropagation(); togglePinChat(convo.id); }}
+                    className={`p-1.5 rounded-full hover:bg-muted text-muted-foreground ${isPinned ? '' : 'opacity-0 group-hover:opacity-100 transition-opacity'}`}
+                    title={isPinned ? 'Unpin' : 'Pin'}
+                >
+                    {isPinned ? <BookmarkIconSolid className="w-4 h-4"/> : <BookmarkIcon className="w-4 h-4"/>}
+                </button>
+
+                {(isEditMode && canDeleteConvo) && (
+                    <button
+                        onClick={(e) => handleDeleteConversation(e, convo.id)}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-destructive text-destructive-foreground rounded-full shadow-md animate-scale-in hover:bg-destructive/90 transition-colors"
+                        title="Delete conversation"
+                    >
+                        <TrashIcon className="w-4 h-4"/>
+                    </button>
+                )}
+            </div>
+        );
+    };
+
+    const allUsersList = useMemo(() => Object.values(users), [users]);
+
+    return (
+        <div className="fixed inset-0 bg-background flex flex-col overflow-hidden overscroll-none">
+            <div className="hidden md:block flex-none">
+                <Header currentUser={currentUser} onLogout={handleLogout} onNavigate={onNavigate} currentPath={currentPath} />
+            </div>
+
+            {/* Main Content Area */}
+            <main className="flex-1 relative w-full max-w-7xl mx-auto md:px-4 md:pt-4 md:pb-28 lg:pb-4 h-full overflow-hidden md:flex md:flex-row-reverse md:gap-4">
+                
+                {/* LEFT SIDEBAR (Chat List) - Now Visually on Right via flex-row-reverse */}
+                <div 
+                    className={`
+                        absolute inset-0 z-10 w-full h-full bg-card flex flex-col transition-transform duration-300 ease-out
+                        md:relative md:w-96 md:inset-auto md:translate-x-0 md:rounded-2xl md:border border-border md:shadow-sm
+                        ${selectedConversationId ? '-translate-x-full md:translate-x-0' : 'translate-x-0'}
+                    `}
+                >
+                    
+                    {/* Static Header */}
+                    <div className="flex-none px-4 py-3 flex items-center justify-between bg-card/95 backdrop-blur-sm border-b border-border h-16 md:rounded-t-2xl z-20">
+                        <h1 className="text-xl font-black text-foreground tracking-tight">Messages</h1>
+                        <div className="flex gap-2">
+                            <button 
+                                onClick={() => setIsEditMode(!isEditMode)} 
+                                className={`p-2 rounded-full transition-all duration-200 ${
+                                    isEditMode 
+                                    ? 'bg-destructive text-destructive-foreground shadow-md hover:bg-destructive/90' 
+                                    : 'bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80'
+                                }`} 
+                                title={isEditMode ? "Done Editing" : "Edit List"}
+                            >
+                                {isEditMode ? <CloseIcon className="w-5 h-5"/> : <EditIcon className="w-5 h-5"/>}
+                            </button>
+                            <button 
+                                onClick={() => setIsNewConvoModalOpen(true)} 
+                                className="p-2 rounded-full bg-primary text-primary-foreground shadow-md hover:bg-primary/90 transition-colors" 
+                                title="New Chat"
+                            >
+                                <PlusIcon className="w-5 h-5"/>
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Search & Filter */}
+                    <div className="flex-none p-4 space-y-4 bg-card z-10">
+                        <div className="relative group">
+                            <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                            <input 
+                                type="text" 
+                                placeholder="Search..." 
+                                value={searchQuery}
+                                onChange={e => setSearchQuery(e.target.value)}
+                                className="w-full bg-muted/50 hover:bg-muted border border-transparent focus:bg-background focus:border-primary rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none transition-all shadow-sm placeholder:text-muted-foreground"
+                            />
+                        </div>
+                        
+                        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+                            {['All', 'Groups', 'Direct'].map(filter => (
+                                <button 
+                                    key={filter}
+                                    onClick={() => setActiveFilter(filter as any)}
+                                    className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all border ${
+                                        activeFilter === filter 
+                                        ? 'bg-foreground text-background border-foreground shadow-sm' 
+                                        : 'bg-card text-muted-foreground border-border hover:border-foreground/30'
+                                    }`}
+                                >
+                                    {filter}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Chat List - Scrollable */}
+                    <div className="flex-1 overflow-y-auto custom-scrollbar px-2 pb-20 lg:pb-2">
+                        {(pinnedChats.length + groupChats.length + directChats.length) > 0 ? (
+                            <div className="space-y-4">
+                                {pinnedChats.length > 0 && (
+                                    <div className="space-y-1">
+                                        <div className="px-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Pinned</div>
+                                        {pinnedChats.map(convo => renderChatRow(convo as any, true))}
+                                    </div>
+                                )}
+                                {groupChats.length > 0 && (
+                                    <div className="space-y-1">
+                                        <div className="px-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Groups</div>
+                                        {groupChats.map(convo => renderChatRow(convo as any, false))}
+                                    </div>
+                                )}
+                                {directChats.length > 0 && (
+                                    <div className="space-y-1">
+                                        <div className="px-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Direct</div>
+                                        {directChats.map(convo => renderChatRow(convo as any, false))}
+                                    </div>
+                                )}
+                            </div>
+                        ) : (
+                            <div className="flex flex-col items-center justify-center h-full text-center p-8 opacity-60">
+                                <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mb-4">
+                                    <MessageIcon className="w-10 h-10 text-muted-foreground"/>
+                                </div>
+                                <h3 className="text-lg font-bold text-foreground">No chats yet</h3>
+                                <p className="text-sm text-muted-foreground mt-1 max-w-[200px]">Start a new conversation to connect with others.</p>
+                                <button onClick={() => setIsNewConvoModalOpen(true)} className="mt-6 text-primary font-bold text-sm hover:underline flex items-center gap-1">
+                                    Start Chatting <ChevronRightIcon className="w-4 h-4"/>
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* RIGHT SIDEBAR (Chat Panel) - Now Visually on Left via flex-row-reverse */}
+                <div 
+                    className={`
+                        absolute inset-0 z-20 w-full h-full bg-background flex flex-col transition-transform duration-300 ease-in-out
+                        md:relative md:flex-1 md:inset-auto md:translate-x-0 md:bg-card md:rounded-2xl md:overflow-hidden md:border border-border md:shadow-sm
+                        ${selectedConversationId ? 'translate-x-0' : 'translate-x-full'}
+                    `}
+                >
+            {selectedConversation ? (
+                <ChatPanel 
+                    conversation={selectedConversation as Conversation} 
+                    currentUser={currentUser} 
+                    users={users} 
+                    onSendMessage={(cid, text) => {
+                        const convo = selectedConversation as any;
+                        if (convo.kind === 'course') {
+                            onSendCourseMessage(convo.courseId, text);
+                        } else {
+                            onSendMessage(cid, text);
+                        }
+                    }}
+                    onDeleteMessagesForEveryone={onDeleteMessagesForEveryone}
+                    onDeleteMessagesForSelf={onDeleteMessagesForSelf}
+                    onClose={() => setSelectedConversationId(null)}
+                    onNavigate={onNavigate}
+                />
+            ) : (
+                        <div className="hidden md:flex flex-col items-center justify-center h-full text-muted-foreground">
+                            <div className="w-24 h-24 bg-gradient-to-br from-muted to-muted/50 rounded-[2rem] flex items-center justify-center mb-6 rotate-12 shadow-inner">
+                                <MessageIcon className="w-12 h-12 text-muted-foreground/40" />
+                            </div>
+                            <h2 className="text-2xl font-bold text-foreground">Select a conversation</h2>
+                            <p className="text-sm mt-2 opacity-70">Choose a chat from the list or start a new one.</p>
+                        </div>
+                    )}
+                </div>
+            </main>
+
+            <NewConversationModal
+                isOpen={isNewConvoModalOpen}
+                onClose={() => setIsNewConvoModalOpen(false)}
+                users={allUsersList}
+                currentUser={currentUser}
+                onSelectUser={handleSelectUser}
+            />
+
+            <div className={selectedConversationId ? "hidden md:block" : "block"}>
+                <BottomNavBar currentUser={currentUser} onNavigate={onNavigate} currentPage={currentPath} />
+            </div>
+        </div>
+    );
+};
+
+export default ChatPage;
