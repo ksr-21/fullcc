@@ -27,7 +27,8 @@ export const updateUser = async (req, res) => {
     const updates = req.body;
     updates.updatedAt = new Date();
 
-    const user = await User.findByIdAndUpdate(req.user.userId, updates, { new: true });
+    const userId = req.params.id || req.user.userId;
+    const user = await User.findByIdAndUpdate(userId, updates, { new: true });
     if (!user) return res.status(404).json({ message: 'User not found' });
     res.json(user);
   } catch (error) {
@@ -42,6 +43,17 @@ export const getAllUsers = async (req, res) => {
     res.json(users);
   } catch (error) {
     console.error('getAllUsers error', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+export const deleteUser = async (req, res) => {
+  try {
+    const user = await User.findByIdAndDelete(req.params.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    res.json({ message: 'User deleted' });
+  } catch (error) {
+    console.error('deleteUser error', error);
     res.status(500).json({ message: 'Server error' });
   }
 };

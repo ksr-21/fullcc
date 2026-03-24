@@ -1,23 +1,37 @@
-import bcrypt from 'bcryptjs';
 import User from '../models/User.js';
 import { generateToken } from '../config/jwt.js';
 
-// In a Firebase -> Mongo replace, client will pass firebaseId as uid and email
 export const register = async (req, res) => {
   try {
-    const { firebaseId, name, email, department, tag } = req.body;
-    if (!firebaseId || !name || !email || !tag) {
+    const { name, email, password, department, tag, collegeId } = req.body;
+    if (!name || !email || !password) {
       return res.status(400).json({ message: 'Missing required fields' });
     }
 
-    let user = await User.findOne({ firebaseId });
-    if (user) return res.status(409).json({ message: 'User already exists' });
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(409).json({ message: 'User already exists' });
+    }
 
-    user = new User({ firebaseId, name, email, department, tag, isRegistered: true });
+    const user = new User({
+      name,
+      email,
+      password,
+      department,
+      tag: tag || 'Student',
+      collegeId,
+      isRegistered: true,
+    });
     await user.save();
 
-    const token = generateToken(user._id.toString(), user.tag);
-    return res.status(201).json({ token, user });
+    return res.status(201).json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      tag: user.tag,
+      collegeId: user.collegeId,
+      token: generateToken(user._id.toString(), user.tag),
+    });
   } catch (error) {
     console.error('Register error:', error);
     res.status(500).json({ message: 'Server error' });
@@ -26,14 +40,24 @@ export const register = async (req, res) => {
 
 export const login = async (req, res) => {
   try {
-    const { firebaseId, email } = req.body;
-    if (!firebaseId && !email) return res.status(400).json({ message: 'firebaseId or email required' });
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Email and password are required' });
+    }
 
-    const user = await User.findOne(firebaseId ? { firebaseId } : { email });
-    if (!user) return res.status(401).json({ message: 'User not found' });
+    const user = await User.findOne({ email });
+    if (!user || !(await user.matchPassword(password))) {
+      return res.status(401).json({ message: 'Invalid email or password' });
+    }
 
-    const token = generateToken(user._id.toString(), user.tag);
-    return res.status(200).json({ token, user });
+    return res.status(200).json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      tag: user.tag,
+      collegeId: user.collegeId,
+      token: generateToken(user._id.toString(), user.tag),
+    });
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ message: 'Server error' });

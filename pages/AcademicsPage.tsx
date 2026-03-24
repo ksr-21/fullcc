@@ -3,7 +3,7 @@ import { User, Course, Notice, DepartmentChat, College, TimeSlot, TimetableData,
 import Header from '../components/Header';
 import BottomNavBar from '../components/BottomNavBar';
 import Avatar from '../components/Avatar';
-import { auth, db } from '../firebase';
+import { auth, db } from '../api';
 import { 
     BookOpenIcon, CloseIcon, PlusIcon, ArrowRightIcon, MegaphoneIcon, 
     TrashIcon, ClipboardListIcon,

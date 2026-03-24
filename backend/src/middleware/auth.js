@@ -1,3 +1,4 @@
+import User from '../models/User.js';
 import { verifyToken } from '../config/jwt.js';
 
 export const authenticate = async (req, res, next) => {
@@ -9,7 +10,19 @@ export const authenticate = async (req, res, next) => {
     }
 
     const decoded = verifyToken(token);
-    req.user = decoded;
+    const user = await User.findById(decoded.userId).select('-password');
+    if (!user) {
+      return res.status(401).json({ error: 'User not found' });
+    }
+
+    req.user = {
+      ...decoded,
+      _id: user._id,
+      userId: user._id.toString(),
+      role: user.tag,
+      tag: user.tag,
+      collegeId: user.collegeId,
+    };
     next();
   } catch (error) {
     res.status(401).json({ error: 'Invalid or expired token' });
@@ -24,3 +37,5 @@ export const authorize = (allowedRoles) => {
     next();
   };
 };
+
+export const protect = authenticate;

@@ -14,7 +14,8 @@ import {
     CheckSquareIcon, XCircleIcon, CalendarIcon, ListIcon, LayoutGridIcon,
     FilterIcon, EyeIcon, SearchIcon
 } from '../components/Icons';
-import { auth, db, FieldValue } from '../firebase';
+import { auth, FieldValue } from '../api';
+import { db } from '../api';
 
 // Helper to get YYYY-MM-DD in local time
 const getLocalISOString = (date: Date) => {

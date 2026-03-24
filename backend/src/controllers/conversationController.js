@@ -44,3 +44,36 @@ export const addMessage = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+export const getConversationById = async (req, res) => {
+  try {
+    const conversation = await Conversation.findById(req.params.id);
+    if (!conversation) return res.status(404).json({ message: 'Conversation not found' });
+    res.json(conversation);
+  } catch (error) {
+    console.error('getConversationById error', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+export const updateConversation = async (req, res) => {
+  try {
+    const conversation = await Conversation.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!conversation) return res.status(404).json({ message: 'Conversation not found' });
+    res.json(conversation);
+  } catch (error) {
+    console.error('updateConversation error', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+export const deleteConversation = async (req, res) => {
+  try {
+    const conversation = await Conversation.findByIdAndDelete(req.params.id);
+    if (!conversation) return res.status(404).json({ message: 'Conversation not found' });
+    res.json({ message: 'Conversation deleted' });
+  } catch (error) {
+    console.error('deleteConversation error', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};

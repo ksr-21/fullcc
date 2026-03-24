@@ -6,7 +6,7 @@ import BottomNavBar from '../components/BottomNavBar';
 import Feed from '../components/Feed';
 import Avatar from '../components/Avatar';
 import { SearchIcon, UsersIcon, ArrowRightIcon, CloseIcon } from '../components/Icons';
-import { auth } from '../firebase';
+import { auth } from '../api';
 
 interface SearchPageProps {
   currentUser: User;

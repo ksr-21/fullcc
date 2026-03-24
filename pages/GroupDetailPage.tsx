@@ -13,7 +13,8 @@ import {
     FileIcon, InfoIcon, ShieldIcon, CheckCircleIcon, XCircleIcon, LinkIcon,
     DownloadIcon, EyeIcon, SearchIcon, XIcon, MailIcon
 } from '../components/Icons';
-import { auth, db, FieldValue } from '../firebase';
+import { auth, FieldValue } from '../api';
+import { db } from '../api';
 
 interface GroupDetailPageProps {
   group: Group;

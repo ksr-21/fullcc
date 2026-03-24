@@ -6,7 +6,7 @@ import BottomNavBar from '../components/BottomNavBar';
 import Feed from '../components/Feed';
 import CreateConfessionModal from '../components/CreateConfessionModal';
 import { GhostIcon, PlusIcon } from '../components/Icons';
-import { auth } from '../firebase';
+import { auth } from '../api';
 
 interface ConfessionsPageProps {
   currentUser: User;

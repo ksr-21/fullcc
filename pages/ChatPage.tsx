@@ -5,7 +5,7 @@ import Avatar from '../components/Avatar';
 import ChatPanel from '../components/ChatPanel';
 import NewConversationModal from '../components/NewConversationModal';
 import BottomNavBar from '../components/BottomNavBar';
-import { auth } from '../firebase';
+import { auth } from '../api';
 import { 
     MessageIcon, UsersIcon, SearchIcon, PlusIcon, TrashIcon, EditIcon, CloseIcon, ChevronRightIcon, BookmarkIcon, BookmarkIconSolid
 } from '../components/Icons';

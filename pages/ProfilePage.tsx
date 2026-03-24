@@ -16,7 +16,7 @@ import CreateOpportunityModal from '../components/CreateOpportunityModal';
 import CreateProjectModal from '../components/CreateProjectModal';
 import CreateRoadmapModal from '../components/CreateRoadmapModal';
 import InlineCreatePost from '../components/InlineCreatePost';
-import { auth } from '../firebase';
+import { auth } from '../api';
 import { 
     PostIcon, UsersIcon, StarIcon, BookmarkIcon, ArrowLeftIcon, 
     PlusIcon, BriefcaseIcon, CodeIcon, TrophyIcon, CheckCircleIcon,
