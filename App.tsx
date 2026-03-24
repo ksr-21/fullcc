@@ -501,8 +501,29 @@ function App() {
   }
 
   switch(path) {
+      case '#/home':
+          return <HomePage
+              currentUser={activeUser}
+              users={users}
+              posts={posts}
+              stories={stories}
+              groups={groups}
+              events={posts.filter(p => p.isEvent)}
+              notices={notices}
+              onNavigate={handleNavigate}
+              currentPath={currentPath}
+              onAddPost={(d) => handleCreate('posts', {...d, authorId: activeUser.id, collegeId: activeUser.collegeId, timestamp: Date.now()})}
+              onAddStory={(d) => handleCreate('stories', {...d, authorId: activeUser.id, collegeId: activeUser.collegeId, timestamp: Date.now()})}
+              onMarkStoryAsViewed={(id) => handleUpdate('stories', id, { viewedBy: FieldValue.arrayUnion(activeUser.id) })}
+                onDeleteStory={(id) => handleDelete('stories', id)}
+                onDeleteNotice={(id) => handleDelete('notices', id)}
+                onReplyToStory={()=>{}}
+                onLikeStory={()=>{}}
+                onRefreshPosts={refreshPosts}
+                {...commonFeedProps}
+            />;
       case '#/superadmin':
-          return <SuperAdminPage colleges={colleges} users={users} onCreateCollegeAdmin={async (name, email) => { const collegeRef = await handleCreate('colleges', { name, adminUids: [] }); await handleCreate('invites', { name: 'Director', email, tag: 'Director', collegeId: collegeRef.id, isApproved: false, isRegistered: false }); }} onNavigate={handleNavigate} currentUser={activeUser} currentPath={currentPath} onApproveDirector={async (uid, collegeName) => { const user = users[uid]; let collegeId = user.collegeId; if (!collegeId) { const collegeRef = await handleCreate('colleges', { name: collegeName, adminUids: [uid] }); collegeId = collegeRef.id; } handleUpdateAnyUser(uid, { isApproved: true, collegeId }); }} onChangeCollegeAdmin={handleChangeCollegeAdmin} onDeleteUser={(uid) => { const isInvite = invitedUsers[uid]; handleDelete(isInvite ? 'invites' : 'users', uid); }} onDeleteCollege={(cid) => handleDelete('colleges', cid)} />;
+          return <SuperAdminPage colleges={colleges} users={users} onCreateCollegeAdmin={async (name, email) => { const collegeRef = await handleCreate('colleges', { name, adminUids: [] }); const inviteRef = await handleCreate('invites', { name: 'Director', email, tag: 'Director', collegeId: collegeRef.id, isApproved: false, isRegistered: false }); await handleUpdate('colleges', collegeRef.id, { adminUids: [inviteRef.id] }); }} onNavigate={handleNavigate} currentUser={activeUser} currentPath={currentPath} onApproveDirector={async (uid, collegeName) => { const user = users[uid]; let collegeId = user.collegeId; if (!collegeId) { const collegeRef = await handleCreate('colleges', { name: collegeName, adminUids: [uid] }); collegeId = collegeRef.id; } else { await handleUpdate('colleges', collegeId, { adminUids: FieldValue.arrayUnion(uid) }); } handleUpdateAnyUser(uid, { isApproved: true, collegeId }); }} onChangeCollegeAdmin={handleChangeCollegeAdmin} onDeleteUser={(uid) => { const isInvite = invitedUsers[uid]; handleDelete(isInvite ? 'invites' : 'users', uid); }} onDeleteCollege={(cid) => handleDelete('colleges', cid)} />;
       case '#/academics':
           return <AcademicsPage currentUser={activeUser} onNavigate={handleNavigate} currentPath={currentPath} courses={courses} notices={notices} users={users} colleges={colleges} departmentChats={[]} onCreateCourse={(d) => handleCreate('courses', { ...d, collegeId: activeUser.collegeId })} onCreateNotice={(d) => handleCreate('notices', { ...d, authorId: activeUser.id, collegeId: activeUser.collegeId, timestamp: Date.now() })} onDeleteNotice={(id) => handleDelete('notices', id)} onUpdateCourse={(id, data) => handleUpdate('courses', id, data)} onDeleteCourse={(id) => handleDelete('courses', id)} onRequestToJoinCourse={()=>{}} onSendDepartmentMessage={()=>{}} onCreateUser={async ()=>{}} onCreateUsersBatch={async (data) => { const batch = db.batch(); data.forEach(u => { const ref = db.collection('invites').doc(); batch.set(ref, { ...u, collegeId: activeUser.collegeId, createdAt: Date.now() }); }); await batch.commit(); return { successCount: data.length, errors: [] }; }} onApproveTeacherRequest={()=>{}} onDeclineTeacherRequest={()=>{}} onUpdateCollege={(cid, data) => handleUpdate('colleges', cid, data)} />;
       case '#/groups':
