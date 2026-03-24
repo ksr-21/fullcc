@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { auth, db, FieldValue, FieldPath } from './firebase';
+import { auth, FieldValue, FieldPath } from './firebase';
+import { db } from './api';
 import { User, Post, Group, Story, Notice, Course, College, Conversation, UserTag, ReactionType } from './types';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
