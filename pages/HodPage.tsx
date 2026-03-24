@@ -9,7 +9,7 @@ import Avatar from '../components/Avatar';
 import CreateSingleUserModal from '../components/CreateSingleUserModal';
 import AddStudentsCsvModal from '../components/AddStudentsCsvModal';
 import AddTeachersCsvModal from '../components/AddTeachersCsvModal';
-import { auth } from '../firebase';
+import { auth } from '../api';
 import { db } from '../api';
 import { 
     ChartPieIcon, UsersIcon, BookOpenIcon, MegaphoneIcon, ChartBarIcon, 

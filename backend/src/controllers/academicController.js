@@ -1,4 +1,5 @@
 import Course from '../models/Course.js';
+import { transformUpdate } from '../utils/queryHelper.js';
 
 const getCourses = async (req, res) => {
     const courses = await Course.find({ collegeId: req.user.collegeId });
@@ -12,8 +13,11 @@ const createCourse = async (req, res) => {
 
 const updateCourse = async (req, res) => {
     const course = await Course.findById(req.params.id);
-    if (course) { Object.assign(course, req.body); const updatedCourse = await course.save(); res.json(updatedCourse); }
-    else { res.status(404); throw new Error('Course not found'); }
+    if (course) {
+        const mongoUpdate = transformUpdate(req.body);
+        const updatedCourse = await Course.findByIdAndUpdate(req.params.id, mongoUpdate, { new: true });
+        res.json(updatedCourse);
+    } else { res.status(404); throw new Error('Course not found'); }
 };
 
 const addCourseNote = async (req, res) => {
@@ -33,4 +37,15 @@ const takeAttendance = async (req, res) => {
     } else { res.status(404); throw new Error('Course not found'); }
 };
 
-export { getCourses, createCourse, updateCourse, addCourseNote, takeAttendance };
+const deleteCourse = async (req, res) => {
+    const course = await Course.findById(req.params.id);
+    if (course) {
+        await course.deleteOne();
+        res.json({ message: 'Course removed' });
+    } else {
+        res.status(404);
+        throw new Error('Course not found');
+    }
+};
+
+export { getCourses, createCourse, updateCourse, addCourseNote, takeAttendance, deleteCourse };

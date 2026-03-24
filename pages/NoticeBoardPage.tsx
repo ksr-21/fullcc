@@ -3,7 +3,7 @@ import type { User, Notice } from '../types';
 import Header from '../components/Header';
 import BottomNavBar from '../components/BottomNavBar';
 import Avatar from '../components/Avatar';
-import { auth } from '../firebase';
+import { auth } from '../api';
 import { MegaphoneIcon, PlusIcon, CloseIcon, ChevronDownIcon, TrashIcon, CheckSquareIcon } from '../components/Icons';
 // FIX: Centralize constants by importing from constants.ts to remove local definitions.
 // FIX: `departmentOptions` is not in constants.ts; it is college-specific. Importing `yearOptions` only and defining a placeholder for departments.

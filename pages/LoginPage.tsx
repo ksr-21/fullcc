@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { auth } from '../firebase';
+import { auth } from '../api';
 import { MailIcon, LockIcon } from '../components/Icons';
 
 interface LoginPageProps {

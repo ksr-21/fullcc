@@ -1,4 +1,5 @@
 import Group from '../models/Group.js';
+import { transformUpdate } from '../utils/queryHelper.js';
 
 const getGroups = async (req, res) => {
     const groups = await Group.find({ collegeId: req.user.collegeId });
@@ -27,4 +28,27 @@ const followGroup = async (req, res) => {
     } else { res.status(404); throw new Error('Group not found'); }
 };
 
-export { getGroups, createGroup, joinGroup, followGroup };
+const updateGroup = async (req, res) => {
+    const group = await Group.findById(req.params.id);
+    if (group) {
+        const mongoUpdate = transformUpdate(req.body);
+        const updatedGroup = await Group.findByIdAndUpdate(req.params.id, mongoUpdate, { new: true });
+        res.json(updatedGroup);
+    } else {
+        res.status(404);
+        throw new Error('Group not found');
+    }
+};
+
+const deleteGroup = async (req, res) => {
+    const group = await Group.findById(req.params.id);
+    if (group) {
+        await group.deleteOne();
+        res.json({ message: 'Group removed' });
+    } else {
+        res.status(404);
+        throw new Error('Group not found');
+    }
+};
+
+export { getGroups, createGroup, joinGroup, followGroup, updateGroup, deleteGroup };

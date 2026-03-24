@@ -14,7 +14,7 @@ import CreateOpportunityModal from '../components/CreateOpportunityModal';
 import CreateProjectModal from '../components/CreateProjectModal';
 import CreateRoadmapModal from '../components/CreateRoadmapModal';
 import InlineCreatePost from '../components/InlineCreatePost';
-import { auth } from '../firebase';
+import { auth } from '../api';
 import { SparkleIcon, CloseIcon } from '../components/Icons';
 
 // --- NEW HELPER COMPONENT WITH PORTAL AND MAX Z-INDEX ---
