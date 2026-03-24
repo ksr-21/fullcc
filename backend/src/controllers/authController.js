@@ -45,7 +45,14 @@ export const login = async (req, res) => {
       return res.status(400).json({ message: 'Email and password are required' });
     }
 
-    const user = await User.findOne({ email });
+    let user;
+    try {
+      user = await User.findOne({ email }).maxTimeMS(5000);
+    } catch (err) {
+      console.error('Database query failed:', err);
+      return res.status(503).json({ message: 'Database service unavailable' });
+    }
+
     if (!user || !(await user.matchPassword(password))) {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
