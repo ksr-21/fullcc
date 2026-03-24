@@ -10,9 +10,28 @@ Campus Connect is a campus-focused social and academic app built with React + Vi
 
 1. Install dependencies:
    `npm install`
-2. (Optional) Update `.env.local` if your setup needs environment variables.
-3. Start the dev server:
-   `npm run dev`
+2. Update environment variables:
+   - Copy `backend/.env.example` to `backend/.env` and update `MONGODB_URI` with your connection string.
+   - (Optional) Create a `.env` in the root directory for frontend variables like `VITE_API_URL` (defaults to `http://localhost:5000/api`).
+3. Start the backend:
+   ```bash
+   cd backend
+   npm install
+   npm start
+   ```
+4. Start the frontend:
+   ```bash
+   npm install
+   npm run dev
+   ```
+
+## Troubleshooting
+
+### "Login failed: Failed to fetch"
+This usually means the frontend cannot reach the backend.
+1. Check if the backend is running on port 5000.
+2. Ensure `CORS_ORIGIN` in `backend/.env` includes `http://localhost:5173`.
+3. Check if your IP address is whitelisted in your MongoDB Atlas cluster if you are using Atlas.
 
 ## Build for Production
 
