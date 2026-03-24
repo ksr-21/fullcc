@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { User } from '../types';
-import { auth } from '../firebase';
+import { auth } from '../api';
 import { 
     HomeIcon, UsersIcon, SearchIcon, UserIcon, CalendarIcon, BriefcaseIcon, 
     HomeIconSolid, UsersIconSolid, SearchIconSolid, UserIconSolid, CalendarIconSolid, BriefcaseIconSolid,

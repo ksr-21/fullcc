@@ -1,6 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { auth, FieldValue } from '../firebase';
-import { db } from '../api';
+import { auth, FieldValue, db } from '../api';
 import type { User } from '../types';
 import { MailIcon, LockIcon, CameraIcon, UserIcon, XCircleIcon, ShieldIcon } from '../components/Icons';
 
@@ -166,14 +165,14 @@ const SignupPage: React.FC<SignupPageProps> = ({ onNavigate }) => {
             };
             
             // 6. Execute Migration (Batch Write)
-            const batch = db.batch();
+            // Simplified for MongoDB direct API as batch is not fully implemented in mock
             const newUserRef = db.collection('users').doc(newId);
-            batch.set(newUserRef, newUserData, { merge: true });
+            await newUserRef.set(newUserData, { merge: true });
 
             if (sourceCollection === 'invites') {
-                batch.delete(db.collection('invites').doc(oldId));
+                await db.collection('invites').doc(oldId).delete();
             } else if (sourceCollection === 'users' && oldId !== newId) {
-                batch.delete(db.collection('users').doc(oldId));
+                await db.collection('users').doc(oldId).delete();
             }
 
             // Relational Migrations if ID changed
@@ -185,34 +184,36 @@ const SignupPage: React.FC<SignupPageProps> = ({ onNavigate }) => {
                     if (collegeSnap.exists) {
                         const cData = collegeSnap.data();
                         const newAdmins = (cData.adminUids || []).filter((id: string) => id !== oldId).concat(newId);
-                        batch.update(collegeRef, { adminUids: newAdmins });
+                        await collegeRef.update({ adminUids: newAdmins });
                     }
                 }
 
                 // Courses (Faculty)
                 const facultyCoursesSnap = await db.collection('courses').where('facultyId', '==', oldId).get();
-                facultyCoursesSnap.forEach((doc: any) => batch.update(doc.ref, { facultyId: newId }));
+                for (const doc of facultyCoursesSnap.docs) {
+                    await db.collection('courses').doc(doc.id).update({ facultyId: newId });
+                }
 
                 // Courses (Students)
                 const studentCoursesSnap = await db.collection('courses').where('students', 'array-contains', oldId).get();
-                studentCoursesSnap.forEach((doc: any) => {
+                for (const doc of studentCoursesSnap.docs) {
                     const sData = doc.data();
                     const newStudents = (sData.students || []).filter((id: string) => id !== oldId).concat(newId);
-                    batch.update(doc.ref, { students: newStudents });
-                });
+                    await db.collection('courses').doc(doc.id).update({ students: newStudents });
+                }
 
                 // Groups (Membership & Creator)
                 const groupMembersSnap = await db.collection('groups').where('memberIds', 'array-contains', oldId).get();
-                groupMembersSnap.forEach((doc: any) => {
+                for (const doc of groupMembersSnap.docs) {
                     const gData = doc.data();
                     const newMembers = (gData.memberIds || []).filter((id: string) => id !== oldId).concat(newId);
-                    batch.update(doc.ref, { memberIds: newMembers });
-                });
+                    await db.collection('groups').doc(doc.id).update({ memberIds: newMembers });
+                }
                 const groupCreatorSnap = await db.collection('groups').where('creatorId', '==', oldId).get();
-                groupCreatorSnap.forEach((doc: any) => batch.update(doc.ref, { creatorId: newId }));
+                for (const doc of groupCreatorSnap.docs) {
+                    await db.collection('groups').doc(doc.id).update({ creatorId: newId });
+                }
             }
-
-            await batch.commit();
             window.location.reload();
 
         } catch (err: any) {

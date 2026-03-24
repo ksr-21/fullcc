@@ -5,7 +5,7 @@ import Header from '../components/Header';
 import GroupCard from '../components/GroupCard';
 import CreateGroupModal from '../components/CreateGroupModal';
 import BottomNavBar from '../components/BottomNavBar';
-import { auth } from '../firebase';
+import { auth } from '../api';
 import { GhostIcon, ArrowRightIcon, PlusCircleIcon, UsersIcon } from '../components/Icons';
 
 interface GroupsPageProps {

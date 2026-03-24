@@ -15,7 +15,7 @@ import {
     ChartBarIcon, GlobeIcon, CheckCircleIcon, ClockIcon,
     TrashIcon
 } from '../components/Icons';
-import { auth } from '../firebase';
+import { auth } from '../api';
 import Avatar from '../components/Avatar';
 
 interface OpportunitiesPageProps {

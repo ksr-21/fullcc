@@ -8,7 +8,7 @@ import {
     CalendarIcon, MapPinIcon, ClockIcon, ArrowLeftIcon, UsersIcon, 
     ShareIcon, CheckCircleIcon, PlusIcon, UserIcon 
 } from '../components/Icons';
-import { auth } from '../firebase';
+import { auth } from '../api';
 
 interface EventDetailPageProps {
     eventId: string;

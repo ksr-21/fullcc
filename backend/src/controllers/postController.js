@@ -1,4 +1,5 @@
 import Post from '../models/Post.js';
+import { transformUpdate } from '../utils/queryHelper.js';
 
 const getPosts = async (req, res) => {
     const posts = await Post.find({ collegeId: req.user.collegeId }).sort({ timestamp: -1 });
@@ -46,4 +47,16 @@ const addComment = async (req, res) => {
     } else { res.status(404); throw new Error('Post not found'); }
 };
 
-export { getPosts, createPost, deletePost, reactToPost, addComment };
+const updatePost = async (req, res) => {
+    const post = await Post.findById(req.params.id);
+    if (post) {
+        const mongoUpdate = transformUpdate(req.body);
+        const updatedPost = await Post.findByIdAndUpdate(req.params.id, mongoUpdate, { new: true });
+        res.json(updatedPost);
+    } else {
+        res.status(404);
+        throw new Error('Post not found');
+    }
+};
+
+export { getPosts, createPost, deletePost, reactToPost, addComment, updatePost };

@@ -5,7 +5,7 @@ import Header from '../components/Header';
 import BottomNavBar from '../components/BottomNavBar';
 import CreatePostModal from '../components/CreatePostModal';
 import { CalendarIcon, PlusIcon, SearchIcon, FilterIcon, ClockIcon, MapPinIcon, ArrowRightIcon } from '../components/Icons';
-import { auth } from '../firebase';
+import { auth } from '../api';
 
 interface EventsPageProps {
   currentUser: User;

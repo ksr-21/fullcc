@@ -3,7 +3,7 @@ import React, { useState, useMemo, useRef } from 'react';
 import type { User, PersonalNote } from '../types';
 import Header from '../components/Header';
 import BottomNavBar from '../components/BottomNavBar';
-import { auth } from '../firebase';
+import { auth } from '../api';
 import { NotebookIcon, PlusIcon, SearchIcon, TrashIcon, ArrowLeftIcon } from '../components/Icons';
 
 interface PersonalNotesPageProps {
