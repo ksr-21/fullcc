@@ -7,14 +7,14 @@ declare const firebase: any;
 // The API key is loaded from an environment variable for security.
 // Use process.env.API_KEY as the exclusive source for the API key.
 const firebaseConfig = {
- apiKey: "AIzaSyBxGsCp9EalIKA5Nr5GwCiJGTbTz6hqMoY",
-  authDomain: "campus-connect-a832c.firebaseapp.com",
-  databaseURL: "https://campus-connect-a832c-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "campus-connect-a832c",
-  storageBucket: "campus-connect-a832c.firebasestorage.app",
-  messagingSenderId: "475351085570",
-  appId: "1:475351085570:web:24e751a9a93e7154cf2d1b",
-  measurementId: "G-SWKF6LS1H7"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
 // Initialize Firebase

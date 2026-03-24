@@ -24,8 +24,8 @@ import PersonalNotesPage from './pages/PersonalNotesPage';
 import NoticeBoardPage from './pages/NoticeBoardPage';
 
 // Cloudinary Configuration
-const CLOUDINARY_CLOUD_NAME = "dwhm79co7";
-const CLOUDINARY_UPLOAD_PRESET = "campus_connect_uploads";
+const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
 
 const uploadToCloudinary = async (file: File): Promise<string> => {
     const formData = new FormData();
