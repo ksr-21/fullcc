@@ -9,7 +9,8 @@ import {
     ChevronDownIcon, ArrowRightIcon, MoreVerticalIcon, UserPlusIcon, EditIcon, MessageIcon, CalendarIcon, BriefcaseIcon
 } from '../components/Icons';
 import Header from '../components/Header';
-import { auth, db } from '../firebase';
+import { auth } from '../firebase';
+import { db } from '../api';
 import BottomNavBar from '../components/BottomNavBar';
 import Avatar from '../components/Avatar';
 

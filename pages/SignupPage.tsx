@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
-import { auth, db, FieldValue } from '../firebase';
+import { auth, FieldValue } from '../firebase';
+import { db } from '../api';
 import type { User } from '../types';
 import { MailIcon, LockIcon, CameraIcon, UserIcon, XCircleIcon, ShieldIcon } from '../components/Icons';
 

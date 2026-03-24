@@ -4,7 +4,8 @@ import Header from '../components/Header';
 import BottomNavBar from '../components/BottomNavBar';
 import Avatar from '../components/Avatar';
 import { ArrowLeftIcon, CalendarIcon, DownloadIcon, UsersIcon, SearchIcon, SaveIcon, EditIcon } from '../components/Icons';
-import { auth, db } from '../firebase';
+import { auth } from '../firebase';
+import { db } from '../api';
 
 // Helper to get YYYY-MM-DD in local time
 const getLocalISOString = (date: Date) => {
