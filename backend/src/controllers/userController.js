@@ -1,4 +1,5 @@
 import User from '../models/User.js';
+import { transformUpdate } from '../utils/queryHelper.js';
 
 export const getMe = async (req, res) => {
   try {
@@ -24,8 +25,9 @@ export const getUserById = async (req, res) => {
 
 export const updateUser = async (req, res) => {
   try {
-    const updates = req.body;
-    updates.updatedAt = new Date();
+    const updates = transformUpdate(req.body);
+    if (updates.$set) updates.$set.updatedAt = new Date();
+    else updates.$set = { updatedAt: new Date() };
 
     const userId = req.params.id || req.user.userId;
     const user = await User.findByIdAndUpdate(userId, updates, { new: true });

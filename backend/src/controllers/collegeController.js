@@ -1,4 +1,5 @@
 import College from '../models/College.js';
+import { transformUpdate } from '../utils/queryHelper.js';
 
 const getCollegeById = async (req, res) => {
     const college = await College.findById(req.params.id);
@@ -17,8 +18,8 @@ const createCollege = async (req, res) => {
 const updateCollege = async (req, res) => {
     const college = await College.findById(req.params.id);
     if (college) {
-        Object.assign(college, req.body);
-        const updatedCollege = await college.save();
+        const mongoUpdate = transformUpdate(req.body);
+        const updatedCollege = await College.findByIdAndUpdate(req.params.id, mongoUpdate, { new: true });
         res.json(updatedCollege);
     } else { res.status(404); throw new Error('College not found'); }
 };

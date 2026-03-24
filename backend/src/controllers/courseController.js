@@ -1,4 +1,5 @@
 import Course from '../models/Course.js';
+import { transformUpdate } from '../utils/queryHelper.js';
 
 export const createCourse = async (req, res) => {
   try {
@@ -35,7 +36,8 @@ export const getCourseById = async (req, res) => {
 
 export const updateCourse = async (req, res) => {
   try {
-    const course = await Course.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const mongoUpdate = transformUpdate(req.body);
+    const course = await Course.findByIdAndUpdate(req.params.id, mongoUpdate, { new: true });
     if (!course) return res.status(404).json({ message: 'Course not found' });
     res.json(course);
   } catch (error) {

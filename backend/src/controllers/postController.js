@@ -1,4 +1,5 @@
 import Post from '../models/Post.js';
+import { transformUpdate } from '../utils/queryHelper.js';
 
 export const createPost = async (req, res) => {
   try {
@@ -35,7 +36,8 @@ export const getPostById = async (req, res) => {
 
 export const updatePost = async (req, res) => {
   try {
-    const post = await Post.findOneAndUpdate({ _id: req.params.id, authorId: req.user.userId }, req.body, { new: true });
+    const mongoUpdate = transformUpdate(req.body);
+    const post = await Post.findOneAndUpdate({ _id: req.params.id, authorId: req.user.userId }, mongoUpdate, { new: true });
     if (!post) return res.status(404).json({ message: 'Post not found or unauthorized' });
     res.json(post);
   } catch (error) {

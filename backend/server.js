@@ -18,8 +18,11 @@ import postRoutes from './src/routes/postRoutes.js';
 import storyRoutes from './src/routes/storyRoutes.js';
 import groupRoutes from './src/routes/groupRoutes.js';
 import chatRoutes from './src/routes/chatRoutes.js';
+import conversationRoutes from './src/routes/conversationRoutes.js';
+import courseRoutes from './src/routes/courseRoutes.js';
 import academicRoutes from './src/routes/academicRoutes.js';
 import noticeRoutes from './src/routes/noticeRoutes.js';
+import inviteRoutes from './src/routes/inviteRoutes.js';
 import careerRoutes from './src/routes/careerRoutes.js';
 import uploadRoutes from './src/routes/uploadRoutes.js';
 
@@ -50,8 +53,11 @@ app.use('/api/posts', postRoutes);
 app.use('/api/stories', storyRoutes);
 app.use('/api/groups', groupRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/conversations', conversationRoutes);
+app.use('/api/courses', courseRoutes);
 app.use('/api/academics', academicRoutes);
 app.use('/api/notices', noticeRoutes);
+app.use('/api/invites', inviteRoutes);
 app.use('/api/career', careerRoutes);
 app.use('/api/upload', uploadRoutes);
 

@@ -1,4 +1,5 @@
 import Conversation from '../models/Conversation.js';
+import { transformUpdate } from '../utils/queryHelper.js';
 
 export const createConversation = async (req, res) => {
   try {
@@ -58,7 +59,8 @@ export const getConversationById = async (req, res) => {
 
 export const updateConversation = async (req, res) => {
   try {
-    const conversation = await Conversation.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const mongoUpdate = transformUpdate(req.body);
+    const conversation = await Conversation.findByIdAndUpdate(req.params.id, mongoUpdate, { new: true });
     if (!conversation) return res.status(404).json({ message: 'Conversation not found' });
     res.json(conversation);
   } catch (error) {
