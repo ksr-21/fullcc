@@ -1080,7 +1080,9 @@ const ClassPerformanceModal = ({ isOpen, onClose, classData, courses, faculty, s
                             let pct = 0, hasClassToday = false, presentCount = 0, totalStudents = 0;
                             if (todayRecord && todayRecord.records) {
                                 totalStudents = Object.keys(todayRecord.records).length;
-                                presentCount = Object.values(todayRecord.records).filter((s:any) => s.status === 'present').length;
+                                if (todayRecord.records) {
+                                    presentCount = Object.values(todayRecord.records).filter((s:any) => s.status === 'present').length;
+                                }
                                 if (totalStudents > 0) { pct = Math.round((presentCount / totalStudents) * 100); hasClassToday = true; }
                             }
                             const facultyMember = faculty.find((f: any) => f.id === course.facultyId);
@@ -1369,7 +1371,7 @@ interface HodPageProps {
     onUpdateCourse: (courseId: string, data: any) => void;
     onDeleteCourse: (courseId: string) => void;
     notices: Notice[];
-    users: User[];
+    users: { [key: string]: User };
     allUsers: User[];
     onCreateNotice: (notice: any) => void;
     onDeleteNotice: (id: string) => void;
@@ -1479,9 +1481,11 @@ const HodPage: React.FC<HodPageProps> = (props) => {
         let totalInstances = 0;
         deptCourses.forEach(course => {
             course.attendanceRecords?.forEach(record => {
-                const statuses = Object.values(record.records);
-                totalInstances += statuses.length;
-                totalPresent += statuses.filter(s => (s as any).status === 'present').length;
+                if (record.records) {
+                    const statuses = Object.values(record.records);
+                    totalInstances += statuses.length;
+                    totalPresent += statuses.filter(s => (s as any).status === 'present').length;
+                }
             });
         });
         return totalInstances > 0 ? Math.round((totalPresent / totalInstances) * 100) : 0;
@@ -1493,7 +1497,7 @@ const HodPage: React.FC<HodPageProps> = (props) => {
         deptCourses.forEach(course => {
             const classKey = `${course.year}-${course.division}`;
             const todayRecord = course.attendanceRecords?.find(r => new Date(r.date).toDateString() === todayStr);
-            if (todayRecord) {
+            if (todayRecord && todayRecord.records) {
                 const statuses = Object.values(todayRecord.records);
                 if (statuses.length > 0) {
                     const presentCount = statuses.filter((s: any) => s.status === 'present').length;
@@ -1522,9 +1526,11 @@ const HodPage: React.FC<HodPageProps> = (props) => {
             let p = 0, t = 0;
             courses.forEach(c => {
                 c.attendanceRecords?.forEach(r => {
-                    Object.values(r.records).forEach((s:any) => {
-                        t++; if(s.status === 'present') p++;
-                    });
+                    if (r.records) {
+                        Object.values(r.records).forEach((s:any) => {
+                            t++; if(s.status === 'present') p++;
+                        });
+                    }
                 });
             });
             const avg = t > 0 ? Math.round((p/t)*100) : 0;
