@@ -1344,10 +1344,12 @@ const DirectorPage: React.FC<DirectorPageProps> = (props) => {
         collegeCourses.forEach(course => {
             course.attendanceRecords?.forEach(record => {
                 const isToday = new Date(record.date).toDateString() === todayStr;
-                Object.values(record.records).forEach((statusObj: any) => {
-                    globalTotal++; if (statusObj.status === 'present') globalPresent++;
-                    if (isToday) { todayTotal++; if (statusObj.status === 'present') todayPresent++; }
-                });
+                if (record.records) {
+                    Object.values(record.records).forEach((statusObj: any) => {
+                        globalTotal++; if (statusObj.status === 'present') globalPresent++;
+                        if (isToday) { todayTotal++; if (statusObj.status === 'present') todayPresent++; }
+                    });
+                }
             });
         });
         return {
@@ -1362,7 +1364,7 @@ const DirectorPage: React.FC<DirectorPageProps> = (props) => {
         return college.departments.map((dept: string) => {
             const courses = collegeCourses.filter((c: any) => c.department === dept);
             let present = 0, total = 0;
-            courses.forEach((c: any) => { c.attendanceRecords?.forEach((r: any) => { Object.values(r.records).forEach((status: any) => { total++; if (status.status === 'present') present++; }); }); });
+            courses.forEach((c: any) => { c.attendanceRecords?.forEach((r: any) => { if (r.records) { Object.values(r.records).forEach((status: any) => { total++; if (status.status === 'present') present++; }); } }); });
             return { department: dept, percentage: total > 0 ? Math.round((present / total) * 100) : 0, totalStudents: total };
         }).sort((a: any, b: any) => b.percentage - a.percentage);
     }, [college, collegeCourses]);
@@ -1838,7 +1840,7 @@ const DirectorPage: React.FC<DirectorPageProps> = (props) => {
                                     const dCourses = collegeCourses.filter((c:any) => c.department === dept);
                                     let totalRecs = 0, totalPresent = 0, todayRecs = 0, todayPresent = 0;
                                     const todayStr = new Date().toDateString();
-                                    dCourses.forEach(c => { c.attendanceRecords?.forEach(r => { const isToday = new Date(r.date).toDateString() === todayStr; Object.values(r.records).forEach((s: any) => { totalRecs++; if(s.status === 'present') totalPresent++; if(isToday) { todayRecs++; if(s.status === 'present') todayPresent++; } }); }); });
+                                    dCourses.forEach(c => { c.attendanceRecords?.forEach(r => { const isToday = new Date(r.date).toDateString() === todayStr; if (r.records) { Object.values(r.records).forEach((s: any) => { totalRecs++; if(s.status === 'present') totalPresent++; if(isToday) { todayRecs++; if(s.status === 'present') todayPresent++; } }); } }); });
                                     const avg = totalRecs > 0 ? Math.round((totalPresent/totalRecs)*100) : 0;
                                     const daily = todayRecs > 0 ? Math.round((todayPresent/todayRecs)*100) : 0;
                                     const facultyCount = allUsers.filter(u => u.collegeId === college.id && u.department === dept && u.tag === 'Teacher').length;
