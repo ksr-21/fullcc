@@ -4,6 +4,9 @@ import { transformUpdate } from '../utils/queryHelper.js';
 export const createPost = async (req, res) => {
   try {
     const body = { ...req.body, authorId: req.user.userId, timestamp: new Date() };
+    if (!body.collegeId && req.user.collegeId) {
+      body.collegeId = req.user.collegeId;
+    }
     const post = new Post(body);
     await post.save();
     res.status(201).json(post);
@@ -15,7 +18,11 @@ export const createPost = async (req, res) => {
 
 export const getFeed = async (req, res) => {
   try {
-    const feed = await Post.find({}).sort({ timestamp: -1 }).limit(100);
+    const filter = {};
+    if (req.query.collegeId) {
+      filter.collegeId = req.query.collegeId;
+    }
+    const feed = await Post.find(filter).sort({ timestamp: -1 }).limit(100);
     res.json(feed);
   } catch (error) {
     console.error('getFeed error', error);
