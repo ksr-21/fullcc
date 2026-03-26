@@ -30,7 +30,7 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({ currentUser, onNavigate }) =>
     <div className="space-y-8">
         {/* Profile Card - Premium Redesign */}
         <div className="bg-card rounded-[2.5rem] shadow-xl border border-border/40 overflow-hidden group hover:shadow-2xl transition-all duration-500">
-            <div className="h-28 bg-gradient-to-br from-primary via-purple-600 to-secondary relative">
+            <div className="h-28 bg-gradient-to-br from-primary via-teal-600 to-secondary relative">
                 <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-30 mix-blend-overlay"></div>
                 <div className="absolute -bottom-1 left-0 w-full h-12 bg-gradient-to-t from-card to-transparent"></div>
             </div>

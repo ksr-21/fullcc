@@ -75,7 +75,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
         <div className="min-h-screen flex w-full bg-background font-sans">
             {/* Left Side - Branding / Visuals (Hidden on mobile) */}
             <div className="hidden lg:flex lg:w-1/2 relative bg-primary overflow-hidden items-center justify-center z-10">
-                <div className="absolute inset-0 bg-gradient-to-br from-primary via-blue-600 to-secondary opacity-90"></div>
+                <div className="absolute inset-0 bg-gradient-to-br from-primary via-teal-600 to-secondary opacity-90"></div>
                 {/* Abstract Shapes */}
                 <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
                     <div className="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] rounded-full bg-white/10 blur-3xl animate-pulse"></div>
@@ -180,7 +180,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
                             <button
                                 type="submit"
                                 disabled={isLoading}
-                                className="group relative w-full flex justify-center py-3.5 px-4 border border-transparent text-sm font-bold rounded-xl text-primary-foreground bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all duration-200 transform hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none shadow-lg shadow-primary/30 z-50 cursor-pointer"
+                                className="group relative w-full flex justify-center py-3.5 px-4 border border-transparent text-sm font-bold rounded-xl text-primary-foreground bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all duration-200 transform hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none shadow-lg shadow-primary/30 glow-primary z-50 cursor-pointer"
                             >
                                 {isLoading ? (
                                     <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

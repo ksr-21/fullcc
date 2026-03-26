@@ -7,7 +7,7 @@ interface WelcomePageProps {
 const WelcomePage: React.FC<WelcomePageProps> = ({ onNavigate }) => {
     return (
         <div className="min-h-screen flex items-center justify-center p-4 overflow-hidden relative">
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800"></div>
+            <div className="absolute inset-0 bg-gradient-to-br from-cyan-50 via-white to-teal-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950"></div>
 
             <div className="container relative z-10">
                 <div className="grid md:grid-cols-2 gap-12 items-center">
@@ -25,7 +25,7 @@ const WelcomePage: React.FC<WelcomePageProps> = ({ onNavigate }) => {
                         <div className="mt-10 flex flex-col sm:flex-row items-center justify-center md:justify-start gap-4">
                             <button
                                 onClick={() => onNavigate('#/login')}
-                                className="w-full sm:w-auto px-8 py-3 text-lg font-semibold text-primary-foreground bg-primary rounded-lg shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all transform hover:scale-105"
+                                className="w-full sm:w-auto px-8 py-3 text-lg font-semibold text-primary-foreground bg-primary rounded-lg shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all transform hover:scale-105 glow-primary"
                             >
                                 Log In
                             </button>

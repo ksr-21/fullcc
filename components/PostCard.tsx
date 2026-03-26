@@ -274,7 +274,7 @@ const PostCard: React.FC<PostCardProps> = (props) => {
 
   return (
     <div className="mb-10 animate-fade-in group relative" style={{ animationDelay: `${(animationIndex || 0) * 100}ms` }}>
-      <div className="absolute -inset-0.5 bg-gradient-to-tr from-primary/40 via-secondary/40 to-primary/40 rounded-[3rem] opacity-0 group-hover:opacity-100 transition duration-700 blur-2xl pointer-events-none"></div>
+      <div className="absolute -inset-0.5 bg-gradient-to-tr from-primary/20 via-cyan-400/20 to-secondary/20 rounded-[3rem] opacity-0 group-hover:opacity-100 transition duration-700 blur-2xl pointer-events-none"></div>
       <div className="relative bg-card rounded-[3rem] shadow-sm border border-border/50 overflow-hidden transition-all duration-500 hover:shadow-2xl hover:-translate-y-1">
         <div className="flex items-center justify-between p-6">
             <div className="flex items-center space-x-4 cursor-pointer group/author" onClick={() => onNavigate(`#/profile/${author.id}`)}>
@@ -301,7 +301,7 @@ const PostCard: React.FC<PostCardProps> = (props) => {
         <div className="px-6 pb-4">
             {post.isEvent && post.eventDetails && (
                  <div className="mb-6 rounded-[2.5rem] overflow-hidden relative shadow-2xl group/event cursor-pointer transform transition-all duration-700 hover:scale-[1.02]">
-                    <div className="absolute inset-0 bg-gradient-to-br from-primary via-purple-700 to-secondary"></div>
+                    <div className="absolute inset-0 bg-gradient-to-br from-primary via-teal-700 to-secondary"></div>
                     <div className="relative p-8 text-white flex flex-col sm:flex-row gap-8 items-center">
                         <div className="flex-shrink-0 bg-white/10 backdrop-blur-xl rounded-[2rem] p-5 text-center min-w-[100px] border border-white/20 shadow-2xl">
                             <span className="block text-xs font-black uppercase tracking-[0.3em] opacity-80 mb-1">{new Date(post.eventDetails.date).toLocaleString('default', { month: 'short' })}</span>

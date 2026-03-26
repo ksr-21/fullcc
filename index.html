@@ -16,75 +16,71 @@
     <style>
         @layer base {
             :root {
-                /* Light Mode - Refined & Modern */
-                /* A very subtle cool slate-white for background to reduce harshness */
-                --background: 210 20% 98%; 
-                
-                /* Dark slate for primary text, ensuring readability and softness */
+                /* Light Mode - Cyan & Teal Theme */
+                --background: 185 20% 98%;
                 --foreground: 222 47% 11%; 
                 
-                /* Pure white for cards to pop against the subtle background */
                 --card: 0 0% 100%;
                 --card-foreground: 222 47% 11%;
                 
                 --popover: 0 0% 100%;
                 --popover-foreground: 222 47% 11%;
                 
-                /* Vibrant Electric Violet - Slightly adjusted for better contrast */
-                --primary: 260 85% 60%; 
-                --primary-foreground: 210 40% 98%;
+                /* Bright Cyan Accent */
+                --primary: 185 100% 40%;
+                --primary-foreground: 185 20% 98%;
                 
-                /* Hot Pink / Magenta */
-                --secondary: 320 90% 60%;
-                --secondary-foreground: 210 40% 98%;
+                /* Teal Secondary */
+                --secondary: 175 60% 45%;
+                --secondary-foreground: 185 20% 98%;
                 
-                --muted: 210 40% 96.1%; /* Very light cool gray */
+                --muted: 185 30% 95%;
                 --muted-foreground: 215 16% 47%;
                 
-                --accent: 210 40% 96.1%;
+                --accent: 185 30% 95%;
                 --accent-foreground: 222 47% 11%;
                 
                 --destructive: 0 84% 60%;
-                --destructive-foreground: 210 40% 98%;
+                --destructive-foreground: 185 20% 98%;
                 
-                --border: 214 32% 91%;
-                --input: 214 32% 91%;
-                --ring: 262 83% 58%;
+                --border: 185 20% 90%;
+                --input: 185 20% 90%;
+                --ring: 185 100% 40%;
                 
                 --radius: 1rem;
             }
         
             .dark {
-                /* Dark Mode - Deep & Rich */
-                --background: 222 47% 11%; /* Deep dark blue/slate */
-                --foreground: 210 40% 98%;
+                /* Dark Mode - Deep Navy & Cyan Theme */
+                --background: 225 60% 6%;
+                --foreground: 185 10% 98%;
                 
-                --card: 222 47% 13%; /* Slightly lighter than bg */
-                --card-foreground: 210 40% 98%;
+                --card: 225 45% 10%;
+                --card-foreground: 185 10% 98%;
                 
-                --popover: 222 47% 13%;
-                --popover-foreground: 210 40% 98%;
+                --popover: 225 45% 10%;
+                --popover-foreground: 185 10% 98%;
                 
-                /* Bright Violet for Dark Mode */
-                --primary: 262 83% 65%;
-                --primary-foreground: 210 40% 98%;
+                /* Neon Cyan for Dark Mode */
+                --primary: 185 100% 50%;
+                --primary-foreground: 225 60% 6%;
                 
-                /* Vibrant Pink for Secondary */
-                --secondary: 320 90% 65%;
-                --secondary-foreground: 210 40% 98%;
+                /* Deep Teal for Secondary */
+                --secondary: 175 70% 40%;
+                --secondary-foreground: 185 10% 98%;
                 
-                --muted: 217 33% 17%;
-                --muted-foreground: 215 20% 65%;
+                --muted: 225 35% 15%;
+                --muted-foreground: 185 10% 70%;
                 
-                --accent: 217 33% 17%;
-                --accent-foreground: 210 40% 98%;
+                --accent: 225 35% 15%;
+                --accent-foreground: 185 10% 98%;
                 
                 --destructive: 0 62% 30%;
-                --destructive-foreground: 210 40% 98%;
+                --destructive-foreground: 185 10% 98%;
                 
-                --border: 217 33% 17%;
-                --input: 217 33% 17%;
-                --ring: 262 83% 65%;
+                --border: 225 35% 18%;
+                --input: 225 35% 18%;
+                --ring: 185 100% 50%;
             }
         }
 
@@ -106,6 +102,17 @@
             @apply border-border;
         }
         
+        /* Custom Effects */
+        .glow-primary {
+            box-shadow: 0 0 15px 2px hsla(var(--primary), 0.5);
+        }
+        .text-glow-primary {
+            text-shadow: 0 0 10px hsla(var(--primary), 0.8);
+        }
+        .glow-secondary {
+            box-shadow: 0 0 15px 2px hsla(var(--secondary), 0.5);
+        }
+
         /* Custom Animations */
         @keyframes fade-in {
             from { opacity: 0; }
@@ -175,9 +182,9 @@
         }
         .dark .chat-background-panel {
              background-image: 
-                radial-gradient(at 40% 20%, hsla(262, 83%, 65%, 0.1) 0px, transparent 50%),
-                radial-gradient(at 80% 0%, hsla(320, 90%, 65%, 0.1) 0px, transparent 50%),
-                radial-gradient(at 0% 50%, hsla(262, 83%, 65%, 0.1) 0px, transparent 50%);
+                radial-gradient(at 40% 20%, hsla(185, 100%, 50%, 0.1) 0px, transparent 50%),
+                radial-gradient(at 80% 0%, hsla(175, 70%, 40%, 0.1) 0px, transparent 50%),
+                radial-gradient(at 0% 50%, hsla(185, 100%, 50%, 0.1) 0px, transparent 50%);
         }
         
         .pattern-dots {
