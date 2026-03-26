@@ -145,7 +145,7 @@ export const TimeSlotEditorModal = ({ isOpen, onClose, slots, onUpdateSlots, sco
             });
             setLocalSlots(parsed);
         }
-    }, [isOpen, slots]);
+    }, [isOpen]);
 
     const handleTimeChange = (idx: number, field: 'start' | 'end', value: string) => {
         const newSlots = [...localSlots];

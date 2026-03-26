@@ -37,7 +37,49 @@ const EventDetailPage: React.FC<EventDetailPageProps> = ({ eventId, posts, users
     const attendeesList = useMemo(() => (eventDetails.attendees || []).map(uid => users[uid]).filter(Boolean), [eventDetails.attendees, users]);
     const isRegistered = (eventDetails.attendees || []).includes(currentUser.id);
     const isPast = new Date(eventDetails.date) < new Date();
-    
+    const canEdit = currentUser.id === event.authorId || currentUser.tag === 'Director';
+    const [isEditing, setIsEditing] = useState(false);
+    const [editForm, setEditForm] = useState({
+        content: event.content,
+        agenda: eventDetails.agenda || [],
+        registrationType: eventDetails.registrationType || 'internal',
+        externalRegistrationLink: eventDetails.externalRegistrationLink || ''
+    });
+
+    const handleSave = async () => {
+        try {
+            await db.collection('posts').doc(eventId).update({
+                content: editForm.content,
+                'eventDetails.agenda': editForm.agenda,
+                'eventDetails.registrationType': editForm.registrationType,
+                'eventDetails.externalRegistrationLink': editForm.externalRegistrationLink
+            });
+            setIsEditing(false);
+        } catch (error) {
+            console.error("Failed to update event:", error);
+            alert("Failed to save changes.");
+        }
+    };
+
+    const addAgendaItem = () => {
+        setEditForm({
+            ...editForm,
+            agenda: [...editForm.agenda, { time: '', activity: '', details: '' }]
+        });
+    };
+
+    const removeAgendaItem = (index: number) => {
+        const newAgenda = [...editForm.agenda];
+        newAgenda.splice(index, 1);
+        setEditForm({ ...editForm, agenda: newAgenda });
+    };
+
+    const updateAgendaItem = (index: number, field: string, value: string) => {
+        const newAgenda = [...editForm.agenda];
+        newAgenda[index] = { ...newAgenda[index], [field]: value };
+        setEditForm({ ...editForm, agenda: newAgenda });
+    };
+
     // Parse description (using content from post)
     const description = event.content;
 
@@ -131,28 +173,47 @@ const EventDetailPage: React.FC<EventDetailPageProps> = ({ eventId, posts, users
                     {/* Action Bar (Sticky on Mobile) */}
                     <div className="fixed bottom-16 left-0 right-0 p-4 bg-background/95 backdrop-blur-lg border-t border-border md:static md:bg-transparent md:border-0 md:p-0 md:mb-8 z-20">
                         <div className="flex gap-3 max-w-4xl mx-auto">
-                            <button 
-                                onClick={() => isRegistered ? onUnregister(eventId) : onRegister(eventId)}
-                                disabled={isPast}
-                                className={`flex-1 py-3.5 rounded-xl font-bold text-base shadow-lg transition-transform active:scale-95 flex items-center justify-center gap-2 ${
-                                    isRegistered 
-                                    ? 'bg-red-50 text-red-600 border-2 border-red-100 hover:bg-red-100' 
-                                    : isPast 
-                                        ? 'bg-muted text-muted-foreground cursor-not-allowed'
-                                        : 'bg-primary text-primary-foreground hover:bg-primary/90'
-                                }`}
-                            >
-                                {isRegistered ? (
-                                    <><CheckCircleIcon className="w-5 h-5"/> Registered</>
-                                ) : isPast ? (
-                                    'Registration Closed'
-                                ) : (
-                                    <><PlusIcon className="w-5 h-5"/> Register Now</>
-                                )}
-                            </button>
+                            {eventDetails.registrationType === 'external' ? (
+                                <a
+                                    href={eventDetails.externalRegistrationLink}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex-1 py-3.5 rounded-xl font-bold text-base shadow-lg transition-transform active:scale-95 flex items-center justify-center gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
+                                >
+                                    <PlusIcon className="w-5 h-5"/> Register (External)
+                                </a>
+                            ) : (
+                                <button
+                                    onClick={() => isRegistered ? onUnregister(eventId) : onRegister(eventId)}
+                                    disabled={isPast}
+                                    className={`flex-1 py-3.5 rounded-xl font-bold text-base shadow-lg transition-transform active:scale-95 flex items-center justify-center gap-2 ${
+                                        isRegistered
+                                        ? 'bg-red-50 text-red-600 border-2 border-red-100 hover:bg-red-100'
+                                        : isPast
+                                            ? 'bg-muted text-muted-foreground cursor-not-allowed'
+                                            : 'bg-primary text-primary-foreground hover:bg-primary/90'
+                                    }`}
+                                >
+                                    {isRegistered ? (
+                                        <><CheckCircleIcon className="w-5 h-5"/> Registered</>
+                                    ) : isPast ? (
+                                        'Registration Closed'
+                                    ) : (
+                                        <><PlusIcon className="w-5 h-5"/> Register Now</>
+                                    )}
+                                </button>
+                            )}
                             <button onClick={handleShare} className="p-3.5 bg-card border border-border rounded-xl text-foreground hover:bg-muted shadow-sm">
                                 <ShareIcon className="w-6 h-6"/>
                             </button>
+                            {canEdit && (
+                                <button
+                                    onClick={() => setIsEditing(!isEditing)}
+                                    className={`p-3.5 rounded-xl border shadow-sm transition-colors ${isEditing ? 'bg-primary text-white border-primary' : 'bg-card border-border text-foreground hover:bg-muted'}`}
+                                >
+                                    <PlusIcon className={`w-6 h-6 transition-transform ${isEditing ? 'rotate-45' : ''}`}/>
+                                </button>
+                            )}
                         </div>
                     </div>
 
@@ -174,44 +235,125 @@ const EventDetailPage: React.FC<EventDetailPageProps> = ({ eventId, posts, users
 
                     {activeTab === 'about' && (
                         <div className="bg-card rounded-3xl p-6 md:p-8 border border-border shadow-sm animate-fade-in space-y-8">
-                            <div className="prose dark:prose-invert max-w-none">
-                                <h3 className="text-lg font-bold mb-2">Description</h3>
-                                <div dangerouslySetInnerHTML={{ __html: description }} className="text-muted-foreground leading-relaxed whitespace-pre-wrap"/>
-                            </div>
+                            {isEditing ? (
+                                <div className="space-y-6">
+                                    <div>
+                                        <label className="block text-sm font-bold text-foreground mb-2">Description</label>
+                                        <textarea
+                                            value={editForm.content}
+                                            onChange={(e) => setEditForm({...editForm, content: e.target.value})}
+                                            className="w-full bg-muted border border-border rounded-xl p-4 text-sm font-medium focus:ring-2 focus:ring-primary outline-none min-h-[150px]"
+                                        />
+                                    </div>
 
-                            {eventDetails.tags && eventDetails.tags.length > 0 && (
-                                <div>
-                                    <h3 className="text-lg font-bold mb-3">Tags</h3>
-                                    <div className="flex flex-wrap gap-2">
-                                        {eventDetails.tags.map(tag => (
-                                            <span key={tag} className="px-3 py-1.5 bg-muted text-muted-foreground text-xs font-bold rounded-lg border border-border">
-                                                #{tag}
-                                            </span>
-                                        ))}
+                                    <div>
+                                        <label className="block text-sm font-bold text-foreground mb-2">Registration Type</label>
+                                        <div className="flex gap-4">
+                                            <button
+                                                onClick={() => setEditForm({...editForm, registrationType: 'internal'})}
+                                                className={`flex-1 py-2 rounded-xl text-sm font-bold border transition-all ${editForm.registrationType === 'internal' ? 'bg-primary text-white border-primary' : 'bg-muted text-muted-foreground border-border'}`}
+                                            >
+                                                In-App Button
+                                            </button>
+                                            <button
+                                                onClick={() => setEditForm({...editForm, registrationType: 'external'})}
+                                                className={`flex-1 py-2 rounded-xl text-sm font-bold border transition-all ${editForm.registrationType === 'external' ? 'bg-primary text-white border-primary' : 'bg-muted text-muted-foreground border-border'}`}
+                                            >
+                                                External Link
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {editForm.registrationType === 'external' && (
+                                        <div>
+                                            <label className="block text-sm font-bold text-foreground mb-2">External Link</label>
+                                            <input
+                                                type="url"
+                                                value={editForm.externalRegistrationLink}
+                                                onChange={(e) => setEditForm({...editForm, externalRegistrationLink: e.target.value})}
+                                                className="w-full bg-muted border border-border rounded-xl px-4 py-2 text-sm font-medium focus:ring-2 focus:ring-primary outline-none"
+                                                placeholder="https://forms.gle/..."
+                                            />
+                                        </div>
+                                    )}
+
+                                    <div>
+                                        <div className="flex justify-between items-center mb-2">
+                                            <label className="block text-sm font-bold text-foreground">Agenda</label>
+                                            <button onClick={addAgendaItem} className="text-xs font-black text-primary uppercase">+ Add Item</button>
+                                        </div>
+                                        <div className="space-y-3">
+                                            {editForm.agenda.map((item, idx) => (
+                                                <div key={idx} className="bg-muted p-4 rounded-xl border border-border relative">
+                                                    <button onClick={() => removeAgendaItem(idx)} className="absolute top-2 right-2 text-muted-foreground hover:text-red-500">×</button>
+                                                    <div className="grid grid-cols-2 gap-3 mb-2">
+                                                        <input
+                                                            placeholder="Time (e.g. 10:00 AM)"
+                                                            value={item.time}
+                                                            onChange={(e) => updateAgendaItem(idx, 'time', e.target.value)}
+                                                            className="bg-background border border-border rounded-lg px-3 py-1.5 text-xs font-bold"
+                                                        />
+                                                        <input
+                                                            placeholder="Activity"
+                                                            value={item.activity}
+                                                            onChange={(e) => updateAgendaItem(idx, 'activity', e.target.value)}
+                                                            className="bg-background border border-border rounded-lg px-3 py-1.5 text-xs font-bold"
+                                                        />
+                                                    </div>
+                                                    <textarea
+                                                        placeholder="Details (optional)"
+                                                        value={item.details}
+                                                        onChange={(e) => updateAgendaItem(idx, 'details', e.target.value)}
+                                                        className="w-full bg-background border border-border rounded-lg px-3 py-1.5 text-xs font-medium min-h-[60px]"
+                                                    />
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div className="flex gap-3 pt-4">
+                                        <button onClick={() => setIsEditing(false)} className="flex-1 py-3 bg-muted text-muted-foreground rounded-xl font-bold">Cancel</button>
+                                        <button onClick={handleSave} className="flex-1 py-3 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20">Save Changes</button>
                                     </div>
                                 </div>
+                            ) : (
+                                <>
+                                    <div className="prose dark:prose-invert max-w-none">
+                                        <h3 className="text-lg font-bold mb-2">Description</h3>
+                                        <div dangerouslySetInnerHTML={{ __html: description }} className="text-muted-foreground leading-relaxed whitespace-pre-wrap"/>
+                                    </div>
+
+                                    {eventDetails.tags && eventDetails.tags.length > 0 && (
+                                        <div>
+                                            <h3 className="text-lg font-bold mb-3">Tags</h3>
+                                            <div className="flex flex-wrap gap-2">
+                                                {eventDetails.tags.map(tag => (
+                                                    <span key={tag} className="px-3 py-1.5 bg-muted text-muted-foreground text-xs font-bold rounded-lg border border-border">
+                                                        #{tag}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {eventDetails.agenda && eventDetails.agenda.length > 0 && (
+                                        <div className="border border-border rounded-2xl overflow-hidden">
+                                            <div className="bg-muted/50 p-4 border-b border-border font-bold text-sm uppercase tracking-wider">Agenda</div>
+                                            <div className="divide-y divide-border">
+                                                {eventDetails.agenda.map((item, idx) => (
+                                                    <div key={idx} className="p-4 flex gap-4">
+                                                        <span className="font-mono text-sm font-bold text-primary whitespace-nowrap min-w-[80px]">{item.time}</span>
+                                                        <div>
+                                                            <p className="font-bold text-sm">{item.activity}</p>
+                                                            {item.details && <p className="text-xs text-muted-foreground mt-1">{item.details}</p>}
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </>
                             )}
-                            
-                            {/* Hardcoded Agenda UI for demo purposes - in real app, add to data model */}
-                            <div className="border rounded-xl overflow-hidden">
-                                <div className="bg-muted/50 p-4 border-b border-border font-bold text-sm uppercase tracking-wider">Agenda</div>
-                                <div className="divide-y divide-border">
-                                    <div className="p-4 flex gap-4">
-                                        <span className="font-mono text-sm font-bold text-primary whitespace-nowrap">{new Date(eventDetails.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
-                                        <div>
-                                            <p className="font-bold text-sm">Start & Introduction</p>
-                                            <p className="text-xs text-muted-foreground">Gathering and welcome speech.</p>
-                                        </div>
-                                    </div>
-                                    <div className="p-4 flex gap-4">
-                                        <span className="font-mono text-sm font-bold text-primary whitespace-nowrap">+ 1h 00m</span>
-                                        <div>
-                                            <p className="font-bold text-sm">Main Session</p>
-                                            <p className="text-xs text-muted-foreground">Key activities and presentations.</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
                         </div>
                     )}
 

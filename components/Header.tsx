@@ -22,6 +22,7 @@ const navItems = [
     { path: '#/groups', icon: UsersIcon, activeIcon: UsersIconSolid, label: 'Groups' },
     { path: '#/events', icon: CalendarIcon, activeIcon: CalendarIconSolid, label: 'Events' },
     { path: '#/opportunities', icon: BriefcaseIcon, activeIcon: BriefcaseIconSolid, label: 'Opportunities' },
+    { path: '#/notifications', icon: MegaphoneIcon, activeIcon: MegaphoneIcon, label: 'Notices' },
     { path: '#/chat', icon: MessageIcon, activeIcon: MessageIconSolid, label: 'Chat' },
 ];
 
@@ -64,6 +65,7 @@ const Header: React.FC<HeaderProps> = ({ currentUser, onLogout, onNavigate, curr
                        {navItems.map(({ path, icon: Icon, activeIcon: ActiveIcon, label }) => {
                            const isActive = currentPath.startsWith(path);
                            const IconComponent = isActive ? ActiveIcon : Icon;
+                           const unreadCount = label === 'Notices' ? (window as any).unreadNoticesCount || 0 : 0;
                            return (
                                 <button
                                     key={path}
@@ -75,7 +77,10 @@ const Header: React.FC<HeaderProps> = ({ currentUser, onLogout, onNavigate, curr
                                     title={label}
                                 >
                                     <div className={`flex flex-col items-center justify-center p-2 rounded-lg w-20 transition-colors ${isActive ? 'bg-primary/10' : 'hover:bg-muted/50'}`}>
-                                      <IconComponent className="w-6 h-6 mb-1" />
+                                      <div className="relative">
+                                        <IconComponent className="w-6 h-6 mb-1" />
+                                        {unreadCount > 0 && <span className="absolute -top-1 -right-1 bg-primary text-white text-[10px] font-black w-4 h-4 flex items-center justify-center rounded-full animate-bounce">{unreadCount}</span>}
+                                      </div>
                                       <span className="text-xs font-medium">{label}</span>
                                     </div>
                                 </button>
@@ -87,11 +92,19 @@ const Header: React.FC<HeaderProps> = ({ currentUser, onLogout, onNavigate, curr
                     <div className="flex items-center space-x-2">
                         {/* Mobile Icons */}
                         <div className="flex items-center lg:hidden">
-                            <button onClick={() => onNavigate('#/academics')} className="p-2 text-foreground hover:text-primary rounded-full" aria-label="Academics">
-                                <BookOpenIcon className="w-6 h-6" />
+                            <button onClick={() => onNavigate('#/search')} className="p-2 text-foreground hover:text-primary rounded-full" aria-label="Search">
+                                <SearchIcon className="w-6 h-6" />
                             </button>
-                            <button onClick={() => onNavigate('#/chat')} className="p-2 text-foreground hover:text-primary rounded-full" aria-label="Messages">
-                                <MessageIcon className="w-6 h-6" />
+                            <button onClick={() => onNavigate('#/notifications')} className="p-2 text-foreground hover:text-primary rounded-full relative" aria-label="Notices">
+                                <MegaphoneIcon className="w-6 h-6" />
+                                {((window as any).unreadNoticesCount || 0) > 0 && (
+                                    <span className="absolute top-1.5 right-1.5 bg-primary text-white text-[10px] font-black w-4 h-4 flex items-center justify-center rounded-full animate-bounce">
+                                        {(window as any).unreadNoticesCount}
+                                    </span>
+                                )}
+                            </button>
+                            <button onClick={() => onNavigate('#/groups')} className="p-2 text-foreground hover:text-primary rounded-full" aria-label="Groups">
+                                <UsersIcon className="w-6 h-6" />
                             </button>
                         </div>
 
