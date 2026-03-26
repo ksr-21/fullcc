@@ -15,7 +15,7 @@ interface ShareModalProps {
   defaultTab?: 'share' | 'message';
 }
 
-const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, currentUser, users, onShareToUser, postToShare, onSharePost, groups, defaultTab }) => {
+const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, currentUser, users, onShareToUsers, postToShare, onSharePost, groups, defaultTab }) => {
   const [activeTab, setActiveTab] = useState<'share' | 'message'>(defaultTab || 'share');
   
   // State for "Share as Post" tab
