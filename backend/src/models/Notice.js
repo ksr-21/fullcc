@@ -7,6 +7,7 @@ const noticeSchema = new mongoose.Schema({
   timestamp: { type: Date, default: Date.now },
   collegeId: mongoose.Schema.Types.ObjectId,
   mediaUrl: String,
+  imageUrl: String,
   targetDepartments: [String],
   targetYears: [Number],
   targetClasses: [String],

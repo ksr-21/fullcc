@@ -59,8 +59,13 @@ app.use('/api/', limiter);
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-// uploads is typically at the root of backend
-const uploadDir = process.env.UPLOAD_DIR || path.join(__dirname, '../uploads');
+
+// Ensure uploadDir matches what's used in multer middleware
+const isProduction = process.env.NODE_ENV === 'production';
+const uploadDir = isProduction
+    ? '/tmp/uploads'
+    : (process.env.UPLOAD_DIR || path.join(process.cwd(), 'uploads'));
+
 app.use('/uploads', express.static(uploadDir));
 
 app.use('/api/auth', authRoutes);

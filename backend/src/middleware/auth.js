@@ -29,10 +29,14 @@ export const authenticate = async (req, res, next) => {
   }
 };
 
-export const authorize = (allowedRoles) => {
+export const authorize = (...allowedRoles) => {
+  // If first argument is an array, use it directly (legacy support)
+  const roles = Array.isArray(allowedRoles[0]) ? allowedRoles[0] : allowedRoles;
   return (req, res, next) => {
-    if (!allowedRoles.includes(req.user?.role)) {
-      return res.status(403).json({ error: 'Unauthorized access' });
+    if (!roles.includes(req.user?.role)) {
+      return res.status(403).json({
+        error: `Unauthorized access. Role '${req.user?.role}' not in [${roles.join(', ')}]`
+      });
     }
     next();
   };
