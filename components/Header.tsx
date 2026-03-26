@@ -60,13 +60,35 @@ const Header: React.FC<HeaderProps> = ({ currentUser, onLogout, onNavigate, curr
                         <span className="font-bold text-xl bg-gradient-to-r from-primary to-cyan-400 bg-clip-text text-transparent cursor-pointer text-glow-primary" onClick={() => onNavigate('#/home')}>CampusConnect</span>
                     </div>
 
+                    {/* Desktop Navigation Links */}
+                    <nav className="hidden lg:flex items-center space-x-1 mx-4">
+                        {navItems.map((item) => {
+                            const isActive = currentPath.startsWith(item.path);
+                            const Icon = isActive ? item.activeIcon : item.icon;
+                            return (
+                                <button
+                                    key={item.path}
+                                    onClick={() => onNavigate(item.path)}
+                                    className={`flex items-center space-x-2 px-3 py-2 rounded-xl text-sm font-bold transition-all ${
+                                        isActive
+                                        ? 'bg-primary/10 text-primary'
+                                        : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                                    }`}
+                                >
+                                    <Icon className="w-4 h-4" />
+                                    <span>{item.label}</span>
+                                </button>
+                            );
+                        })}
+                    </nav>
+
                     {/* Center: Search Bar (Desktop) */}
-                    <div className="hidden lg:flex flex-1 max-w-xl mx-8">
+                    <div className="hidden xl:flex flex-1 max-w-md mx-4">
                         <div className="relative w-full group">
                             <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                             <input
                                 type="text"
-                                placeholder="Search for courses, or events..."
+                                placeholder="Search..."
                                 onClick={() => onNavigate('#/search')}
                                 className="w-full bg-muted/50 hover:bg-muted border border-border/50 focus:border-primary/50 rounded-2xl pl-11 pr-4 py-2.5 text-sm focus:outline-none transition-all cursor-pointer"
                                 readOnly
