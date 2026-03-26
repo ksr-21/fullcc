@@ -12,7 +12,7 @@ interface FeedProps {
   onDeleteComment: (postId: string, commentId: string) => void;
   onDeletePost: (postId: string) => void;
   onCreateOrOpenConversation: (otherUserId: string) => Promise<string>;
-  onSharePostAsMessage: (conversationId: string, authorName: string, postContent: string, imageUrl?: string) => void;
+  onSharePostAsMessages: (userIds: string[], authorName: string, postContent: string, imageUrl?: string) => void;
   onSharePost: (originalPost: Post, commentary: string, shareTarget: { type: 'feed' | 'group'; id?: string }) => void;
   onToggleSavePost: (postId: string) => void;
   groups: Group[];
@@ -23,7 +23,7 @@ interface FeedProps {
 const Feed: React.FC<FeedProps> = (props) => {
   const { 
       posts, users, currentUser, onReaction, onAddComment, onDeletePost, 
-      onDeleteComment, onCreateOrOpenConversation, onSharePostAsMessage, 
+      onDeleteComment, onCreateOrOpenConversation, onSharePostAsMessages,
       onSharePost, onToggleSavePost, groups, onNavigate, onViewImage 
   } = props;
   
@@ -57,7 +57,7 @@ const Feed: React.FC<FeedProps> = (props) => {
               onDeletePost={onDeletePost}
               onDeleteComment={onDeleteComment}
               onCreateOrOpenConversation={onCreateOrOpenConversation}
-              onSharePostAsMessage={onSharePostAsMessage}
+              onSharePostAsMessages={onSharePostAsMessages}
               onSharePost={onSharePost}
               onToggleSavePost={onToggleSavePost}
               groups={groups}

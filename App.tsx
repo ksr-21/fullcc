@@ -621,26 +621,30 @@ function App() {
       onCreateOrOpenConversation: handleCreateOrOpenConversation, 
       
       // --- FIXED: Accept image URL and save it ---
-      onSharePostAsMessage: (cid: string, author: string, content: string, imageUrl?: string) => {
-          // 1. Clean HTML logic
+      onSharePostAsMessages: async (uids: string[], author: string, content: string, imageUrl?: string) => {
           const cleanContent = stripHtml(content);
           
-          const messageData: any = { 
-              id: Date.now().toString(), 
-              senderId: activeUser!.id, 
-              // 2. Full Content
-              text: `Shared a post from ${author}:\n${cleanContent}`, 
-              timestamp: Date.now() 
-          };
-          
-          // 3. Save Image if present
-          if (imageUrl) {
-              messageData.image = imageUrl;
-          }
+          for (const uid of uids) {
+              try {
+                  const cid = await handleCreateOrOpenConversation(uid);
+                  const messageData: any = {
+                      id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
+                      senderId: activeUser!.id,
+                      text: `Shared a post from ${author}:\n${cleanContent}`,
+                      timestamp: Date.now()
+                  };
 
-          handleUpdate('conversations', cid, { 
-              messages: FieldValue.arrayUnion(messageData) 
-          }); 
+                  if (imageUrl) {
+                      messageData.image = imageUrl;
+                  }
+
+                  handleUpdate('conversations', cid, {
+                      messages: FieldValue.arrayUnion(messageData)
+                  });
+              } catch (err) {
+                  console.error(`Failed to share to user ${uid}:`, err);
+              }
+          }
       } 
   };
 
@@ -819,7 +823,7 @@ function App() {
               onToggleSavePost={commonFeedProps.onToggleSavePost}
               onSharePost={commonFeedProps.onSharePost}
               onDeletePost={commonFeedProps.onDeletePost}
-              onSharePostAsMessage={commonFeedProps.onSharePostAsMessage}
+              onSharePostAsMessages={commonFeedProps.onSharePostAsMessages}
               onCreateOrOpenConversation={commonFeedProps.onCreateOrOpenConversation}
           />;
   } 

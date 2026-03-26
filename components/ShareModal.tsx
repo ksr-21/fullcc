@@ -8,7 +8,7 @@ interface ShareModalProps {
   onClose: () => void;
   currentUser: User;
   users: User[];
-  onShareToUser: (userId: string) => void;
+  onShareToUsers: (userIds: string[]) => void;
   postToShare: Post;
   onSharePost: (originalPost: Post, commentary: string, shareTarget: { type: 'feed' | 'group'; id?: string }) => void;
   groups: Group[];
@@ -57,9 +57,7 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, currentUser, u
   };
 
   const handleSendAsMessages = () => {
-    selectedUserIds.forEach(uid => {
-      onShareToUser(uid);
-    });
+    onShareToUsers(selectedUserIds);
     onClose();
   };
 
