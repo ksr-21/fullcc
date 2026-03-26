@@ -27,14 +27,30 @@ const addCourseNote = async (req, res) => {
 };
 
 const takeAttendance = async (req, res) => {
-    const { date, label, records } = req.body;
-    const course = await Course.findById(req.params.id);
-    if (course) {
-        const idx = course.attendanceRecords.findIndex(r => r.date === date);
-        if (idx !== -1) { course.attendanceRecords[idx] = { date, label, records }; }
-        else { course.attendanceRecords.push({ date, label, records }); }
-        await course.save(); res.json(course);
-    } else { res.status(404); throw new Error('Course not found'); }
+    try {
+        const { date, label, records } = req.body;
+        const course = await Course.findById(req.params.id);
+        if (course) {
+            // Find record by comparing timestamps accurately
+            const timestamp = new Date(date).getTime();
+            const idx = course.attendanceRecords.findIndex(r => new Date(r.date).getTime() === timestamp);
+
+            if (idx !== -1) {
+                course.attendanceRecords[idx] = { date: timestamp, label, records };
+            } else {
+                course.attendanceRecords.push({ date: timestamp, label, records });
+            }
+
+            course.markModified('attendanceRecords');
+            await course.save();
+            res.json(course);
+        } else {
+            res.status(404).json({ message: 'Course not found' });
+        }
+    } catch (error) {
+        console.error('takeAttendance error', error);
+        res.status(500).json({ message: 'Server error: ' + error.message });
+    }
 };
 
 const deleteCourse = async (req, res) => {

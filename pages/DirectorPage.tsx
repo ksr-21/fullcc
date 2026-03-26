@@ -7,7 +7,7 @@ import Avatar from '../components/Avatar';
 import CreateSingleUserModal from '../components/CreateSingleUserModal';
 import AddStudentsCsvModal from '../components/AddStudentsCsvModal';
 import AddTeachersCsvModal from '../components/AddTeachersCsvModal';
-import { auth, db, uploadToCloudinary } from '../api';
+import { auth, db, uploadToCloudinary, storage } from '../api';
 import { 
     ChartPieIcon, UsersIcon, BookOpenIcon, MegaphoneIcon, ChartBarIcon,
     PlusIcon, SearchIcon, TrashIcon, CheckCircleIcon, AlertTriangleIcon, 
@@ -639,7 +639,8 @@ const CreateNoticeModal = ({ isOpen, onClose, onCreateNotice, currentUser, colle
         try { 
             let imageUrl = null;
             if (selectedImage) {
-                imageUrl = await uploadToCloudinary(selectedImage);
+                const snapshot = await storage.ref(`notices/${Date.now()}_${selectedImage.name}`).put(selectedImage);
+                imageUrl = await snapshot.ref.getDownloadURL();
             }
             const newNotice = { 
                 title, 

@@ -9,8 +9,7 @@ import Avatar from '../components/Avatar';
 import CreateSingleUserModal from '../components/CreateSingleUserModal';
 import AddStudentsCsvModal from '../components/AddStudentsCsvModal';
 import AddTeachersCsvModal from '../components/AddTeachersCsvModal';
-import { auth } from '../api';
-import { db } from '../api';
+import { auth, db, storage } from '../api';
 import { 
     ChartPieIcon, UsersIcon, BookOpenIcon, MegaphoneIcon, ChartBarIcon, 
     PlusIcon, SearchIcon, TrashIcon, CheckCircleIcon, AlertTriangleIcon, 
@@ -346,7 +345,7 @@ const CreateNoticeModal = ({ isOpen, onClose, onCreateNotice, currentUser, colle
     const [title, setTitle] = useState('');
     const [message, setMessage] = useState('');
     const [audience, setAudience] = useState('All'); 
-    const [selectedImage, setSelectedImage] = useState<string | null>(null);
+    const [selectedImage, setSelectedImage] = useState<File | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const myDept = currentUser.department;
     const [targetYear, setTargetYear] = useState('All');
@@ -366,19 +365,44 @@ const CreateNoticeModal = ({ isOpen, onClose, onCreateNotice, currentUser, colle
         return college.classes[currentUser.department][targetYear].sort();
     }, [college, currentUser.department, targetYear]);
     
-    const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            try { const compressed = await compressImage(file); setSelectedImage(compressed); } catch (err) { alert("Image processing failed."); }
+            setSelectedImage(file);
         }
     };
     
     const handleSend = async (e: React.FormEvent) => {
-        e.preventDefault(); setIsSending(true);
+        e.preventDefault();
+        if (!title.trim() || !message.trim()) return;
+        setIsSending(true);
         try {
-            const newNotice = { id: Date.now().toString(), title, content: message, imageUrl: selectedImage, targetAudience: audience, targetDept: myDept, targetYear: targetYear === 'All' ? null : targetYear, targetDiv: targetDiv === 'All' ? null : targetDiv, targetCourseId: audience === 'Course' ? targetCourseId : null, authorId: currentUser.id, collegeId: currentUser.collegeId, type: 'department', timestamp: new Date().toISOString() };
-            await onCreateNotice(newNotice); onClose();
-        } catch (error) { alert("Failed to send."); } finally { setIsSending(false); }
+            let imageUrl = null;
+            if (selectedImage) {
+                const snapshot = await storage.ref(`notices/${Date.now()}_${selectedImage.name}`).put(selectedImage);
+                imageUrl = await snapshot.ref.getDownloadURL();
+            }
+            const newNotice = {
+                title,
+                content: message,
+                imageUrl: imageUrl,
+                targetAudience: audience,
+                targetDept: myDept,
+                targetYear: targetYear === 'All' ? null : targetYear,
+                targetDiv: targetDiv === 'All' ? null : targetDiv,
+                targetCourseId: audience === 'Course' ? targetCourseId : null,
+                authorId: currentUser.id,
+                collegeId: currentUser.collegeId,
+                type: 'department',
+                timestamp: new Date().toISOString()
+            };
+            await onCreateNotice(newNotice);
+            onClose();
+        } catch (error: any) {
+            alert(`Failed to send: ${error.message || 'Unknown error'}`);
+        } finally {
+            setIsSending(false);
+        }
     };
     
     if (!isOpen) return null;
@@ -396,7 +420,7 @@ const CreateNoticeModal = ({ isOpen, onClose, onCreateNotice, currentUser, colle
                             {(audience === 'Student' || audience === 'Course') && (<div className="grid grid-cols-2 gap-4">{audience === 'Student' && (<><div className="space-y-1"><label className="text-[9px] font-black uppercase text-muted-foreground">Year</label><select value={targetYear} onChange={e => setTargetYear(e.target.value)} className="w-full bg-input border border-border rounded-xl px-3 py-2 text-sm font-medium"><option value="All">All Years</option>{availableYears.map(y => <option key={y} value={y}>Year {y}</option>)}</select></div><div className="space-y-1"><label className="text-[9px] font-black uppercase text-muted-foreground">Div</label><select value={targetDiv} onChange={e => setTargetDiv(e.target.value)} className="w-full bg-input border border-border rounded-xl px-3 py-2 text-sm font-medium"><option value="All">All</option>{availableDivs.map(d => <option key={d} value={d}>Div {d}</option>)}</select></div></>)}{audience === 'Course' && (<div className="col-span-2 space-y-1"><label className="text-[9px] font-black uppercase text-muted-foreground">Subject</label><select value={targetCourseId} onChange={e => setTargetCourseId(e.target.value)} className="w-full bg-input border border-border rounded-xl px-3 py-2 text-sm font-medium"><option value="">-- Choose Subject --</option>{filteredCourses.map((c: Course) => <option key={c.id} value={c.id}>{c.subject}</option>)}</select></div>)}</div>)}
                         </div>
                         <div className="space-y-4"><input value={title} onChange={e => setTitle(e.target.value)} className="w-full bg-input border border-border rounded-xl px-4 py-3 font-bold" placeholder="Title" required /><textarea value={message} onChange={e => setMessage(e.target.value)} rows={5} className="w-full bg-input border border-border rounded-xl px-4 py-3 font-medium resize-none" placeholder="Message" required />
-                        {!selectedImage ? <div onClick={() => fileInputRef.current?.click()} className="border-2 border-dashed border-border rounded-xl p-4 flex items-center justify-center cursor-pointer hover:bg-muted/30"><input type="file" ref={fileInputRef} onChange={handleImageSelect} className="hidden"/><PhotoIcon className="w-5 h-5 text-muted-foreground mr-2"/><span className="text-xs font-bold text-muted-foreground">Add Image</span></div> : <div className="relative h-20 rounded-xl overflow-hidden"><img src={selectedImage} className="w-full h-full object-cover"/><button type="button" onClick={() => setSelectedImage(null)} className="absolute inset-0 bg-black/50 text-white font-bold opacity-0 hover:opacity-100 flex items-center justify-center">Remove</button></div>}</div>
+                        {!selectedImage ? <div onClick={() => fileInputRef.current?.click()} className="border-2 border-dashed border-border rounded-xl p-4 flex items-center justify-center cursor-pointer hover:bg-muted/30"><input type="file" ref={fileInputRef} onChange={handleImageSelect} className="hidden"/><PhotoIcon className="w-5 h-5 text-muted-foreground mr-2"/><span className="text-xs font-bold text-muted-foreground">Add Image</span></div> : <div className="relative h-20 rounded-xl overflow-hidden"><img src={URL.createObjectURL(selectedImage)} className="w-full h-full object-cover"/><button type="button" onClick={() => setSelectedImage(null)} className="absolute inset-0 bg-black/50 text-white font-bold opacity-0 hover:opacity-100 flex items-center justify-center">Remove</button></div>}</div>
                         <div className="flex justify-end pt-4 border-t border-border"><button type="submit" disabled={isSending} className="bg-primary text-white px-8 py-3 rounded-xl font-bold hover:bg-primary/90">{isSending ? 'Posting...' : 'Post Notice'}</button></div>
                     </form>
                 </div>
