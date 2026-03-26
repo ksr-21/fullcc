@@ -7,7 +7,7 @@ import Avatar from '../components/Avatar';
 import CreateSingleUserModal from '../components/CreateSingleUserModal';
 import AddStudentsCsvModal from '../components/AddStudentsCsvModal';
 import AddTeachersCsvModal from '../components/AddTeachersCsvModal';
-import { auth, db, uploadToCloudinary, storage } from '../api';
+import { auth, db, uploadToCloudinary, storage, compressImage } from '../api';
 import { 
     ChartPieIcon, UsersIcon, BookOpenIcon, MegaphoneIcon, ChartBarIcon,
     PlusIcon, SearchIcon, TrashIcon, CheckCircleIcon, AlertTriangleIcon, 
@@ -596,29 +596,6 @@ const DepartmentAttendanceChart: React.FC<{ data: { department: string; percenta
     </div>
 );
 
-const compressImage = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = (event) => {
-            const img = new Image();
-            img.src = event.target?.result as string;
-            img.onload = () => {
-                const canvas = document.createElement('canvas');
-                const maxWidth = 800;
-                let width = img.width, height = img.height;
-                if (width > maxWidth) { height = img.height * (maxWidth / width); width = maxWidth; }
-                canvas.width = width; canvas.height = height;
-                const ctx = canvas.getContext('2d');
-                ctx?.drawImage(img, 0, 0, width, height);
-                resolve(canvas.toDataURL('image/jpeg', 0.7));
-            };
-            img.onerror = (error) => reject(error);
-        };
-        reader.onerror = (error) => reject(error);
-    });
-};
-
 const CreateNoticeModal = ({ isOpen, onClose, onCreateNotice, currentUser, college, courses }: any) => {
     const [title, setTitle] = useState(''); const [message, setMessage] = useState(''); const [audience, setAudience] = useState('All'); const [selectedImage, setSelectedImage] = useState<File | null>(null); const fileInputRef = useRef<HTMLInputElement>(null); const [targetDept, setTargetDept] = useState('All'); const [targetYear, setTargetYear] = useState('All'); const [targetDiv, setTargetDiv] = useState('All'); const [targetCourseId, setTargetCourseId] = useState(''); const [isSending, setIsSending] = useState(false);
     const availableYears = useMemo<number[]>(() => {
@@ -637,15 +614,16 @@ const CreateNoticeModal = ({ isOpen, onClose, onCreateNotice, currentUser, colle
         if (audience === 'Course' && !targetCourseId) { alert("Select a course."); return; } 
         setIsSending(true); 
         try { 
-            let imageUrl = null;
+            let mediaUrl = null;
             if (selectedImage) {
-                const snapshot = await storage.ref(`notices/${Date.now()}_${selectedImage.name}`).put(selectedImage);
-                imageUrl = await snapshot.ref.getDownloadURL();
+                const compressed = await compressImage(selectedImage);
+                const snapshot = await storage.ref(`notices/${Date.now()}_${selectedImage.name}`).put(compressed as any);
+                mediaUrl = await snapshot.ref.getDownloadURL();
             }
             const newNotice = { 
                 title, 
                 content: message, 
-                imageUrl: imageUrl,
+                mediaUrl: mediaUrl,
                 targetAudience: audience, 
                 targetDept: targetDept === 'All' ? null : targetDept, 
                 targetYear: targetYear === 'All' ? null : targetYear, 
@@ -1236,12 +1214,12 @@ const BroadcastManager = ({ notices = [], onCreateNotice, onDeleteNotice, curren
                                     <ExpandableText text={notice.content} />
                                 </div>
 
-                                {notice.imageUrl && (
+                                {(notice.mediaUrl || notice.imageUrl) && (
                                     <div 
-                                        onClick={() => setViewingImage(notice.imageUrl || null)}
+                                        onClick={() => setViewingImage(notice.mediaUrl || notice.imageUrl || null)}
                                         className="mt-auto mb-4 h-32 w-full rounded-xl overflow-hidden cursor-pointer relative group/img"
                                     >
-                                        <img src={notice.imageUrl} alt="Attachment" className="w-full h-full object-cover transition-transform duration-500 group-hover/img:scale-110" />
+                                        <img src={notice.mediaUrl || notice.imageUrl} alt="Attachment" className="w-full h-full object-cover transition-transform duration-500 group-hover/img:scale-110" />
                                         <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity">
                                             <EyeIcon className="w-6 h-6 text-white"/>
                                         </div>

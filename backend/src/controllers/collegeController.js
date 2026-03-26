@@ -19,7 +19,14 @@ const updateCollege = async (req, res) => {
     const college = await College.findById(req.params.id);
     if (college) {
         const mongoUpdate = transformUpdate(req.body);
-        const updatedCollege = await College.findByIdAndUpdate(req.params.id, mongoUpdate, { new: true });
+        const updatedCollege = await College.findByIdAndUpdate(req.params.id, mongoUpdate, { new: true, strict: false });
+
+        // Handle Mongoose detection for Mixed types if they were updated
+        if (req.body.timetable) updatedCollege.markModified('timetable');
+        if (req.body.classes) updatedCollege.markModified('classes');
+        if (req.body.timeSlotsByClass) updatedCollege.markModified('timeSlotsByClass');
+
+        await updatedCollege.save();
         res.json(updatedCollege);
     } else { res.status(404); throw new Error('College not found'); }
 };
