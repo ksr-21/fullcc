@@ -14,8 +14,8 @@ export const createInvite = async (req, res) => {
     let allowed = false;
 
     if (inviterRole === 'Super Admin') {
-      // Superadmin can add anyone, but mostly Directors
-      if (['Director', 'Super Admin'].includes(tag)) allowed = true;
+      // Superadmin can add anyone
+      allowed = true;
     } else if (inviterRole === 'Director') {
       // Director adds HOD, Faculty (Teacher), Students
       if (['HOD/Dean', 'Teacher', 'Student'].includes(tag)) allowed = true;
