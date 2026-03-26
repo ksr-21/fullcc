@@ -343,7 +343,7 @@ export type Notice = {
   timestamp: number | string;
   collegeId?: string;
   mediaUrl?: string; // Added to support images in notices
-  imageUrl?: string;
+  imageUrl?: string; // Kept for backward compatibility
   // FIX: Add optional properties for targeted notices to resolve type errors.
   targetDepartments?: string[];
   targetYears?: number[];

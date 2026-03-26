@@ -63,6 +63,38 @@ const getCellSubjectIds = (cell: any): string[] => {
     return [];
 };
 
+// --- Debounced Input for Room to avoid rapid DB writes ---
+const RoomInput = ({ value, onUpdate }: { value: string, onUpdate: (val: string) => void }) => {
+    const [localValue, setLocalValue] = useState(value);
+
+    useEffect(() => {
+        setLocalValue(value);
+    }, [value]);
+
+    return (
+        <input
+            type="text"
+            placeholder="Room"
+            value={localValue}
+            onChange={(e) => setLocalValue(e.target.value)}
+            onBlur={() => {
+                if (localValue !== value) {
+                    onUpdate(localValue);
+                }
+            }}
+            onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                    if (localValue !== value) {
+                        onUpdate(localValue);
+                    }
+                    (e.target as HTMLInputElement).blur();
+                }
+            }}
+            className="w-full bg-transparent text-[10px] font-medium text-muted-foreground border-b border-border/30 focus:border-primary outline-none"
+        />
+    );
+};
+
 // --- Helper Components ---
 
 const ModalBackdrop = ({ children, onClose }: { children?: React.ReactNode, onClose: () => void }) => (
@@ -511,7 +543,16 @@ export const TimetableManager = ({
                                         const updateCell = (updates: any) => {
                                             const newSched = { ...schedule };
                                             if (!newSched[day]) newSched[day] = {};
-                                            newSched[day][slot.id] = { ...cell, ...updates };
+
+                                            // Handle special case for facultyId vs facultyIds
+                                            const mergedCell = { ...cell, ...updates };
+                                            if (updates.facultyIds && updates.facultyIds.length > 0) {
+                                                mergedCell.facultyId = updates.facultyIds[0];
+                                            } else if (updates.facultyIds && updates.facultyIds.length === 0) {
+                                                mergedCell.facultyId = undefined;
+                                            }
+
+                                            newSched[day][slot.id] = mergedCell;
                                             handleUpdateSchedule(newSched);
                                         };
 
@@ -574,7 +615,7 @@ export const TimetableManager = ({
                                                         </div>
                                                         <div className="flex items-center gap-2">
                                                             <MapPinIcon className="w-3 h-3 text-muted-foreground/50 shrink-0"/>
-                                                            <input type="text" placeholder="Room" value={cell.roomId || ''} onChange={(e) => updateCell({ roomId: e.target.value })} className="w-full bg-transparent text-[10px] font-medium text-muted-foreground border-b border-border/30 focus:border-primary outline-none" />
+                                                            <RoomInput value={cell.roomId || ''} onUpdate={(val) => updateCell({ roomId: val })} />
                                                         </div>
                                                         {getCellSubjectIds(cell).length > 0 && (
                                                             <div className="mt-1">

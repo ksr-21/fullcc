@@ -3,7 +3,7 @@ import { User, Course, Notice, DepartmentChat, College, TimeSlot, TimetableData,
 import Header from '../components/Header';
 import BottomNavBar from '../components/BottomNavBar';
 import Avatar from '../components/Avatar';
-import { auth, db } from '../api';
+import { auth, db, compressImage } from '../api';
 import { 
     BookOpenIcon, CloseIcon, PlusIcon, ArrowRightIcon, MegaphoneIcon, 
     TrashIcon, ClipboardListIcon,
@@ -243,12 +243,12 @@ const NoticeCard = ({ notice, author, onDelete, onViewImage }: { notice: Notice 
                     {notice.title}
                 </h3>
                 
-                {notice.mediaUrl && (
+                {(notice.mediaUrl || notice.imageUrl) && (
                      <div 
-                        onClick={() => onViewImage && onViewImage(notice.mediaUrl!)}
+                        onClick={() => onViewImage && onViewImage(notice.mediaUrl || notice.imageUrl!)}
                         className="mb-4 rounded-xl overflow-hidden h-32 w-full border border-gray-800 cursor-pointer relative group/img"
                      >
-                        <img src={notice.mediaUrl} alt="Notice media" className="w-full h-full object-cover opacity-80 group-hover/img:opacity-100 transition-opacity transform group-hover/img:scale-105 duration-500" />
+                        <img src={notice.mediaUrl || notice.imageUrl} alt="Notice media" className="w-full h-full object-cover opacity-80 group-hover/img:opacity-100 transition-opacity transform group-hover/img:scale-105 duration-500" />
                         <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity">
                             <EyeIcon className="w-6 h-6 text-white"/>
                         </div>
@@ -378,7 +378,8 @@ const CreateNoticeModal = ({ onClose, onCreateNotice, teachingClasses }: { onClo
         try {
             let mediaUrl = '';
             if (imageFile) {
-                mediaUrl = await uploadToCloudinary(imageFile);
+                const compressed = await compressImage(imageFile);
+                mediaUrl = await uploadToCloudinary(compressed);
             }
             onCreateNotice({ 
                 title, 

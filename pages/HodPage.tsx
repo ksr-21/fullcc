@@ -9,7 +9,7 @@ import Avatar from '../components/Avatar';
 import CreateSingleUserModal from '../components/CreateSingleUserModal';
 import AddStudentsCsvModal from '../components/AddStudentsCsvModal';
 import AddTeachersCsvModal from '../components/AddTeachersCsvModal';
-import { auth, db, storage } from '../api';
+import { auth, db, storage, compressImage } from '../api';
 import { 
     ChartPieIcon, UsersIcon, BookOpenIcon, MegaphoneIcon, ChartBarIcon, 
     PlusIcon, SearchIcon, TrashIcon, CheckCircleIcon, AlertTriangleIcon, 
@@ -33,29 +33,6 @@ const DEFAULT_SLOTS: TimeSlot[] = [
 ];
 
 // --- Helper Utilities ---
-
-const compressImage = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = (event) => {
-            const img = new Image();
-            img.src = event.target?.result as string;
-            img.onload = () => {
-                const canvas = document.createElement('canvas');
-                const maxWidth = 800;
-                let width = img.width, height = img.height;
-                if (width > maxWidth) { height = img.height * (maxWidth / width); width = maxWidth; }
-                canvas.width = width; canvas.height = height;
-                const ctx = canvas.getContext('2d');
-                ctx?.drawImage(img, 0, 0, width, height);
-                resolve(canvas.toDataURL('image/jpeg', 0.7));
-            };
-            img.onerror = (error) => reject(error);
-        };
-        reader.onerror = (error) => reject(error);
-    });
-};
 
 // --- UI Components ---
 
@@ -377,15 +354,16 @@ const CreateNoticeModal = ({ isOpen, onClose, onCreateNotice, currentUser, colle
         if (!title.trim() || !message.trim()) return;
         setIsSending(true);
         try {
-            let imageUrl = null;
+            let mediaUrl = null;
             if (selectedImage) {
-                const snapshot = await storage.ref(`notices/${Date.now()}_${selectedImage.name}`).put(selectedImage);
-                imageUrl = await snapshot.ref.getDownloadURL();
+                const compressed = await compressImage(selectedImage);
+                const snapshot = await storage.ref(`notices/${Date.now()}_${selectedImage.name}`).put(compressed as any);
+                mediaUrl = await snapshot.ref.getDownloadURL();
             }
             const newNotice = {
                 title,
                 content: message,
-                imageUrl: imageUrl,
+                mediaUrl: mediaUrl,
                 targetAudience: audience,
                 targetDept: myDept,
                 targetYear: targetYear === 'All' ? null : targetYear,
@@ -516,9 +494,9 @@ const BroadcastManager = ({ notices, onCreateNotice, onDeleteNotice, currentUser
                                     {roleLabel}
                                 </div>
                                 
-                                {notice.imageUrl && (
-                                    <div className="h-48 w-full bg-muted/20 overflow-hidden relative border-b border-border/50 cursor-pointer group/image" onClick={() => setViewImage(notice.imageUrl)}>
-                                        <img src={notice.imageUrl} alt="Notice" className="w-full h-full object-cover transition-transform duration-700 group-hover/image:scale-105"/>
+                                {(notice.mediaUrl || notice.imageUrl) && (
+                                    <div className="h-48 w-full bg-muted/20 overflow-hidden relative border-b border-border/50 cursor-pointer group/image" onClick={() => setViewImage(notice.mediaUrl || notice.imageUrl)}>
+                                        <img src={notice.mediaUrl || notice.imageUrl} alt="Notice" className="w-full h-full object-cover transition-transform duration-700 group-hover/image:scale-105"/>
                                         <div className="absolute inset-0 bg-black/0 group-hover/image:bg-black/20 transition-colors flex items-center justify-center">
                                             <div className="bg-black/50 p-2 rounded-full opacity-0 group-hover/image:opacity-100 transition-opacity backdrop-blur-sm"><EyeIcon className="w-5 h-5 text-white"/></div>
                                         </div>
@@ -1459,6 +1437,7 @@ const HodPage: React.FC<HodPageProps> = (props) => {
     const deptCourses = courses.filter(c => c.department === department);
     const deptNotices = notices.filter(n => (n.targetDept === department || n.authorId === currentUser.id)); 
     const deptFaculty = allUsers.filter(u => u.collegeId === currentUser.collegeId && u.department === department && (u.tag === 'Teacher' || u.tag === 'HOD/Dean'));
+    const allFaculty = allUsers.filter(u => u.collegeId === currentUser.collegeId && (u.tag === 'Teacher' || u.tag === 'HOD/Dean' || u.tag === 'Director'));
     const deptStudents = allUsers.filter(u => u.collegeId === currentUser.collegeId && u.department === department && u.tag === 'Student');
     
     // Get list for Faculty Assignment in HOD View (Only show own department + self)
@@ -1931,7 +1910,7 @@ const HodPage: React.FC<HodPageProps> = (props) => {
                         <TimetableManager 
                             activeClasses={activeClasses}
                             deptCourses={deptCourses}
-                            faculty={deptFaculty}
+                            faculty={allFaculty}
                             timetables={timetables}
                             onUpdateTimetables={(t:any)=>onUpdateCollege(college.id, {timetable: t})}
                             slots={timeSlots}
