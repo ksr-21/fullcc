@@ -205,22 +205,60 @@ const PostCard: React.FC<PostCardProps> = (props) => {
   }, [post.reactions, currentUser.id]);
 
   const reactionSummary = useMemo(() => {
-      const reactions = post.reactions || {};
+      const reactions = optimisticReactions;
       let total = 0;
-      const counts = reactionsList.map(r => ({...r, count: reactions[r.type]?.length || 0})).filter(r => r.count > 0).sort((a,b) => b.count - a.count);
+      const counts = reactionsList.map(r => ({...r, count: (reactions as any)[r.type]?.length || 0})).filter(r => r.count > 0).sort((a,b) => b.count - a.count);
       counts.forEach(r => total += r.count);
       return { total, topEmojis: counts.slice(0, 3) };
-  }, [post.reactions]);
+  }, [optimisticReactions]);
 
   const handleMouseEnter = () => { if (!isReadOnly) { if (pickerTimerRef.current) clearTimeout(pickerTimerRef.current); setPickerVisible(true); } };
   const handleMouseLeave = () => { pickerTimerRef.current = setTimeout(() => setPickerVisible(false), 300); };
   const handleTouchStart = () => { if (!isReadOnly) { wasLongPress.current = false; pickerTimerRef.current = setTimeout(() => { wasLongPress.current = true; setPickerVisible(true); }, 500); } };
   const handleTouchEnd = () => { if (pickerTimerRef.current) clearTimeout(pickerTimerRef.current); setTimeout(() => setPickerVisible(false), 1500); };
-  const handleLikeButtonClick = () => { if (isReadOnly || wasLongPress.current) { wasLongPress.current = false; return; } onReaction(post.id, currentUserReaction ? currentUserReaction.type : 'like'); };
+  const [optimisticReactions, setOptimisticReactions] = useState(post.reactions || {});
+
+  useEffect(() => {
+    setOptimisticReactions(post.reactions || {});
+  }, [post.reactions]);
+
+  const handleLikeButtonClick = () => {
+    if (isReadOnly || wasLongPress.current) {
+        wasLongPress.current = false;
+        return;
+    }
+
+    // Optimistic Update
+    const reaction = currentUserReaction ? currentUserReaction.type : 'like';
+    const newReactions = { ...optimisticReactions };
+
+    // Remove existing reaction if any
+    Object.keys(newReactions).forEach(type => {
+        const t = type as ReactionType;
+        if (newReactions[t]?.includes(currentUser.id)) {
+            newReactions[t] = newReactions[t]?.filter(id => id !== currentUser.id);
+        }
+    });
+
+    // Add new if not toggle off
+    if (!currentUserReaction) {
+        newReactions[reaction] = [...(newReactions[reaction] || []), currentUser.id];
+    }
+
+    setOptimisticReactions(newReactions);
+    onReaction(post.id, reaction);
+  };
+
+  const currentOptimisticReaction = useMemo(() => {
+    for (const reaction of reactionsList) {
+        if (optimisticReactions[reaction.type]?.includes(currentUser.id)) return reaction;
+    }
+    return null;
+  }, [optimisticReactions, currentUser.id]);
 
   const renderReactionsButton = (isConfession = false) => {
-    const btnClass = isConfession ? "text-white/80 hover:text-white hover:bg-white/10" : `transition-all ${currentUserReaction ? currentUserReaction.color + ' bg-primary/5 border-primary/20' : 'text-muted-foreground hover:text-primary bg-muted/40 hover:bg-muted border-transparent'}`;
-    const icon = currentUserReaction ? <span className="text-xl animate-bounce-in">{currentUserReaction.emoji}</span> : <LikeIcon className="w-5 h-5 stroke-[2.5]" fill="none" stroke="currentColor" />;
+    const btnClass = isConfession ? "text-white/80 hover:text-white hover:bg-white/10" : `transition-all ${currentOptimisticReaction ? currentOptimisticReaction.color + ' bg-primary/5 border-primary/20' : 'text-muted-foreground hover:text-primary bg-muted/40 hover:bg-muted border-transparent'}`;
+    const icon = currentOptimisticReaction ? <span className="text-xl animate-bounce-in">{currentOptimisticReaction.emoji}</span> : <LikeIcon className="w-5 h-5 stroke-[2.5]" fill="none" stroke="currentColor" />;
     return (
       <div className="relative" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
            {isPickerVisible && (
@@ -230,7 +268,7 @@ const PostCard: React.FC<PostCardProps> = (props) => {
            )}
           <button onClick={handleLikeButtonClick} onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd} disabled={isReadOnly} className={`px-4 py-2.5 rounded-2xl transition-all active:scale-90 flex items-center gap-2 font-black uppercase tracking-widest text-[10px] border ${btnClass} ${isReadOnly ? 'opacity-50 cursor-not-allowed' : ''}`}>
               {icon}
-              {!isConfession && <span className={currentUserReaction ? currentUserReaction.color : ''}>{currentUserReaction ? currentUserReaction.label : 'Like'}</span>}
+              {!isConfession && <span className={currentOptimisticReaction ? currentOptimisticReaction.color : ''}>{currentOptimisticReaction ? currentOptimisticReaction.label : 'Like'}</span>}
           </button>
       </div>
     )
@@ -296,6 +334,65 @@ const PostCard: React.FC<PostCardProps> = (props) => {
             )}
         </div>
         <div className="px-6 pb-4">
+            {post.isOpportunity && post.opportunityDetails && (
+                 <div
+                    onClick={() => onNavigate(`#/opportunities`)}
+                    className="mb-6 rounded-3xl overflow-hidden bg-emerald-500/5 border border-emerald-500/20 p-5 group/opp cursor-pointer transition-all hover:bg-emerald-500/10"
+                 >
+                    <div className="flex gap-5">
+                        <div className="flex-shrink-0 w-16 h-16 bg-emerald-500/10 rounded-2xl flex items-center justify-center border border-emerald-500/20 shadow-inner">
+                            <BriefcaseIcon className="w-8 h-8 text-emerald-600" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between mb-1">
+                                <span className="text-[9px] font-black uppercase tracking-[0.2em] px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-700 border border-emerald-200">
+                                    {post.opportunityDetails.type || 'Opportunity'}
+                                </span>
+                                {post.opportunityDetails.location && (
+                                    <div className="flex items-center gap-1.5 px-3 py-1 bg-muted rounded-full border border-border">
+                                        <MapPinIcon className="w-3 h-3 text-muted-foreground" />
+                                        <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">{post.opportunityDetails.location}</span>
+                                    </div>
+                                )}
+                            </div>
+                            <h3 className="text-lg font-black text-foreground leading-tight tracking-tight mb-1 truncate">{post.opportunityDetails.title}</h3>
+                            <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider truncate">{post.opportunityDetails.organization}</p>
+                        </div>
+                    </div>
+                    <button className="mt-5 w-full py-3 rounded-2xl bg-emerald-600 text-white font-black text-xs uppercase tracking-widest shadow-lg shadow-emerald-600/20 hover:scale-[1.02] active:scale-95 transition-all">
+                        Apply Now
+                    </button>
+                </div>
+            )}
+
+            {post.isProject && post.projectDetails && (
+                 <div
+                    onClick={() => onNavigate(`#/opportunities`)}
+                    className="mb-6 rounded-3xl overflow-hidden bg-blue-500/5 border border-blue-500/20 p-5 group/project cursor-pointer transition-all hover:bg-blue-500/10"
+                 >
+                    <div className="flex gap-5">
+                        <div className="flex-shrink-0 w-16 h-16 bg-blue-500/10 rounded-2xl flex items-center justify-center border border-blue-500/20 shadow-inner">
+                            <SparkleIcon className="w-8 h-8 text-blue-600" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between mb-1">
+                                <span className="text-[9px] font-black uppercase tracking-[0.2em] px-2 py-0.5 rounded-md bg-blue-100 text-blue-700 border border-blue-200">Project</span>
+                                <div className="flex gap-1 overflow-x-auto no-scrollbar">
+                                    {post.projectDetails.techStack?.slice(0, 2).map(tech => (
+                                        <span key={tech} className="text-[8px] font-black bg-muted px-1.5 py-0.5 rounded border border-border uppercase">{tech}</span>
+                                    ))}
+                                </div>
+                            </div>
+                            <h3 className="text-lg font-black text-foreground leading-tight tracking-tight mb-1 truncate">{post.projectDetails.title}</h3>
+                            <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider truncate line-clamp-1">{post.projectDetails.description}</p>
+                        </div>
+                    </div>
+                    <button className="mt-5 w-full py-3 rounded-2xl bg-blue-600 text-white font-black text-xs uppercase tracking-widest shadow-lg shadow-blue-600/20 hover:scale-[1.02] active:scale-95 transition-all">
+                        View Project
+                    </button>
+                </div>
+            )}
+
             {post.isEvent && post.eventDetails && (
                  <div
                     onClick={() => onNavigate(`#/events/${post.id}`)}

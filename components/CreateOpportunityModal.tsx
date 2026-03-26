@@ -66,7 +66,7 @@ const CreateOpportunityModal: React.FC<CreateOpportunityModalProps> = ({ isOpen,
       <div className="bg-card rounded-2xl shadow-2xl w-full max-w-lg border border-border overflow-hidden" onClick={e => e.stopPropagation()}>
         <div className="p-6 border-b border-border flex justify-between items-center bg-muted/10">
             <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
-                <BriefcaseIcon className="w-6 h-6 text-primary"/> Post Opportunity
+                <BriefcaseIcon className="w-6 h-6 text-primary"/> {type === 'Campus Role' ? 'Post Campus Role' : 'Post Opportunity'}
             </h2>
             <button onClick={onClose} className="p-1 rounded-full hover:bg-muted text-muted-foreground"><CloseIcon className="w-5 h-5"/></button>
         </div>
@@ -103,18 +103,18 @@ const CreateOpportunityModal: React.FC<CreateOpportunityModalProps> = ({ isOpen,
           </div>
 
           <div>
-            <label className="block text-xs font-bold uppercase text-muted-foreground mb-1">Title</label>
-            <input type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g., Frontend Intern, Club Secretary" required className="w-full px-4 py-2.5 bg-input border border-border rounded-lg focus:ring-2 focus:ring-primary outline-none text-foreground"/>
+            <label className="block text-xs font-bold uppercase text-muted-foreground mb-1">{type === 'Campus Role' ? 'Role Title' : 'Opportunity Title'}</label>
+            <input type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder={type === 'Campus Role' ? "e.g., Club Secretary, Core Member" : "e.g., Frontend Intern, Backend Developer"} required className="w-full px-4 py-2.5 bg-input border border-border rounded-lg focus:ring-2 focus:ring-primary outline-none text-foreground"/>
           </div>
           
           <div className="grid grid-cols-2 gap-3">
             <div>
-                <label className="block text-xs font-bold uppercase text-muted-foreground mb-1">Organization</label>
-                <input type="text" value={organization} onChange={e => setOrganization(e.target.value)} placeholder="Company or Club Name" required className="w-full px-4 py-2.5 bg-input border border-border rounded-lg focus:ring-2 focus:ring-primary outline-none text-foreground"/>
+                <label className="block text-xs font-bold uppercase text-muted-foreground mb-1">{type === 'Campus Role' ? 'Club / Department' : 'Organization'}</label>
+                <input type="text" value={organization} onChange={e => setOrganization(e.target.value)} placeholder={type === 'Campus Role' ? "e.g., E-Cell, Coding Club" : "Company Name"} required className="w-full px-4 py-2.5 bg-input border border-border rounded-lg focus:ring-2 focus:ring-primary outline-none text-foreground"/>
             </div>
             <div>
-                <label className="block text-xs font-bold uppercase text-muted-foreground mb-1">Stipend / Salary (Optional)</label>
-                <input type="text" value={stipend} onChange={e => setStipend(e.target.value)} placeholder="e.g., ₹5k/mo, Unpaid" className="w-full px-4 py-2.5 bg-input border border-border rounded-lg focus:ring-2 focus:ring-primary outline-none text-foreground"/>
+                <label className="block text-xs font-bold uppercase text-muted-foreground mb-1">Stipend / Benefits (Optional)</label>
+                <input type="text" value={stipend} onChange={e => setStipend(e.target.value)} placeholder={type === 'Campus Role' ? "e.g., Credits, Certificate" : "e.g., ₹5k/mo, Unpaid"} className="w-full px-4 py-2.5 bg-input border border-border rounded-lg focus:ring-2 focus:ring-primary outline-none text-foreground"/>
             </div>
             </div>
 

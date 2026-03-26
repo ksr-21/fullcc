@@ -65,7 +65,7 @@ const CourseDetailPage: React.FC<CourseDetailPageProps> = ({
     onSendCourseMessage,
     onDeleteNote,
     onDeleteAssignment,
-    initialTab = 'materials',
+    initialTab = 'attendance',
     initialAssignmentId,
     isEmbedded = false,
     isReadOnly = false
@@ -295,19 +295,12 @@ const CourseDetailPage: React.FC<CourseDetailPageProps> = ({
 
     // CSV Download Logic using Date Range
     const downloadAttendanceRegister = () => {
-        if (!course.attendanceRecords?.length) { alert("No attendance records found."); return; }
-        
         const fromTs = new Date(exportFromDate).getTime();
         const toTs = new Date(exportToDate).getTime() + 86400000; // end of day
 
         const recordsInRange = (course.attendanceRecords || [])
             .filter(r => r.date >= fromTs && r.date < toTs)
             .sort((a, b) => a.date - b.date);
-
-        if (recordsInRange.length === 0) {
-            alert("No records found in this date range.");
-            return;
-        }
 
         const csvHeaders = ['roll no.', 'name', ...recordsInRange.map(r => {
             const d = new Date(r.date);
@@ -388,11 +381,11 @@ const CourseDetailPage: React.FC<CourseDetailPageProps> = ({
 
     const tabs = useMemo(() => {
         const t = [
-            { id: 'materials', label: 'Materials', icon: FileTextIcon },
-            { id: 'assignments', label: 'Tasks', icon: ClipboardListIcon },
             { id: 'attendance', label: 'Attendance', icon: CheckSquareIcon, hide: !isFaculty },
-            { id: 'people', label: 'Members', icon: UsersIcon },
-            { id: 'chat', label: 'Discussion', icon: MessageIcon }
+            { id: 'chat', label: 'Discussion', icon: MessageIcon },
+            { id: 'assignments', label: 'Tasks', icon: ClipboardListIcon },
+            { id: 'materials', label: 'Materials', icon: FileTextIcon },
+            { id: 'people', label: 'Members', icon: UsersIcon }
         ];
         return t.filter(x => !x.hide);
     }, [isFaculty]);

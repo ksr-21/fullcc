@@ -82,55 +82,8 @@ const Header: React.FC<HeaderProps> = ({ currentUser, onLogout, onNavigate, curr
                         })}
                     </nav>
 
-                    {/* Center: Search Bar (Desktop) */}
-                    <div className="hidden xl:flex flex-1 max-w-md mx-4">
-                        <div className="relative w-full group">
-                            <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                            <input
-                                type="text"
-                                placeholder="Search..."
-                                onClick={() => onNavigate('#/search')}
-                                className="w-full bg-muted/50 hover:bg-muted border border-border/50 focus:border-primary/50 rounded-2xl pl-11 pr-4 py-2.5 text-sm focus:outline-none transition-all cursor-pointer"
-                                readOnly
-                            />
-                        </div>
-                    </div>
-
                     {/* Right Side Actions */}
                     <div className="flex items-center space-x-3">
-                        {/* Desktop Notification Icon */}
-                        <div className="hidden lg:block relative">
-                            <button
-                                onClick={() => onNavigate('#/notifications')}
-                                className="p-2.5 text-foreground hover:text-primary hover:bg-primary/5 rounded-xl transition-all relative"
-                                aria-label="Notices"
-                            >
-                                <MegaphoneIcon className="w-5 h-5" />
-                                {((window as any).unreadNoticesCount || 0) > 0 && (
-                                    <span className="absolute top-2 right-2 bg-primary text-white text-[8px] font-black w-3.5 h-3.5 flex items-center justify-center rounded-full shadow-lg shadow-primary/20">
-                                        {(window as any).unreadNoticesCount}
-                                    </span>
-                                )}
-                            </button>
-                        </div>
-
-                        {/* Mobile Icons */}
-                        <div className="flex items-center lg:hidden">
-                            <button onClick={() => onNavigate('#/search')} className="p-2 text-foreground hover:text-primary rounded-full" aria-label="Search">
-                                <SearchIcon className="w-6 h-6" />
-                            </button>
-                            <button onClick={() => onNavigate('#/notifications')} className="p-2 text-foreground hover:text-primary rounded-full relative" aria-label="Notices">
-                                <MegaphoneIcon className="w-6 h-6" />
-                                {((window as any).unreadNoticesCount || 0) > 0 && (
-                                    <span className="absolute top-1.5 right-1.5 bg-primary text-white text-[10px] font-black w-4 h-4 flex items-center justify-center rounded-full animate-bounce">
-                                        {(window as any).unreadNoticesCount}
-                                    </span>
-                                )}
-                            </button>
-                            <button onClick={() => onNavigate('#/groups')} className="p-2 text-foreground hover:text-primary rounded-full" aria-label="Groups">
-                                <UsersIcon className="w-6 h-6" />
-                            </button>
-                        </div>
 
                          {/* Theme Toggle */}
                         <button onClick={toggleTheme} className="p-2 text-foreground hover:text-primary rounded-full hover:bg-muted transition-colors" aria-label="Toggle theme">

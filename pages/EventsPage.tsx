@@ -170,54 +170,57 @@ const EventsPage: React.FC<EventsPageProps> = (props) => {
       <main className="flex-1 container max-w-5xl mx-auto px-4 py-6 pb-24 lg:pb-12 relative z-10">
             {/* Main Content */}
             <div className="space-y-6">
-                {/* Compact Search Header with Host Button */}
-                <div className="px-0">
-            <div className="bg-card/95 backdrop-blur-md border border-border shadow-md rounded-2xl p-2.5 flex flex-col md:flex-row gap-2.5">
-                
-                {/* Search */}
-                <div className="relative flex-1">
-                    <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-                    <input 
-                        type="text" 
-                        placeholder="Search events..." 
-                        className="w-full bg-muted/50 hover:bg-muted border border-transparent focus:border-primary rounded-xl pl-9 pr-4 py-2 text-sm focus:outline-none transition-all"
-                        value={searchTerm}
-                        onChange={e => setSearchTerm(e.target.value)}
-                    />
-                </div>
+                {/* Compact Search Header */}
+                <div className="px-0 space-y-4">
+                    <div className="bg-card/95 backdrop-blur-md border border-border shadow-md rounded-2xl p-2.5 flex flex-col md:flex-row gap-2.5">
 
-                <div className="flex gap-2 items-center overflow-x-auto no-scrollbar">
-                    {/* Time Filter */}
-                    <div className="flex bg-muted/50 rounded-xl p-0.5">
-                        {['upcoming', 'today', 'week', 'past'].map(t => (
-                            <button
-                                key={t}
-                                onClick={() => setTimeFilter(t as any)}
-                                className={`px-2.5 py-1.5 rounded-lg text-[11px] font-bold capitalize transition-all ${timeFilter === t ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                        {/* Search */}
+                        <div className="relative flex-1">
+                            <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                            <input
+                                type="text"
+                                placeholder="Search events..."
+                                className="w-full bg-muted/50 hover:bg-muted border border-transparent focus:border-primary rounded-xl pl-9 pr-4 py-2 text-sm focus:outline-none transition-all"
+                                value={searchTerm}
+                                onChange={e => setSearchTerm(e.target.value)}
+                            />
+                        </div>
+
+                        <div className="flex gap-2 items-center overflow-x-auto no-scrollbar">
+                            {/* Time Filter */}
+                            <div className="flex bg-muted/50 rounded-xl p-0.5">
+                                {['upcoming', 'today', 'week', 'past'].map(t => (
+                                    <button
+                                        key={t}
+                                        onClick={() => setTimeFilter(t as any)}
+                                        className={`px-2.5 py-1.5 rounded-lg text-[11px] font-bold capitalize transition-all ${timeFilter === t ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                                    >
+                                        {t}
+                                    </button>
+                                ))}
+                            </div>
+
+                            {/* Category Filter */}
+                            <select
+                                value={categoryFilter}
+                                onChange={(e) => setCategoryFilter(e.target.value)}
+                                className="bg-muted/50 hover:bg-muted border-transparent focus:border-primary rounded-xl px-2 py-1.5 text-xs font-bold text-foreground outline-none cursor-pointer min-w-[100px]"
                             >
-                                {t}
-                            </button>
-                        ))}
+                                {categories.map(c => <option key={c} value={c}>{c}</option>)}
+                            </select>
+                        </div>
                     </div>
 
-                    {/* Category Filter */}
-                    <select 
-                        value={categoryFilter}
-                        onChange={(e) => setCategoryFilter(e.target.value)}
-                        className="bg-muted/50 hover:bg-muted border-transparent focus:border-primary rounded-xl px-2 py-1.5 text-xs font-bold text-foreground outline-none cursor-pointer min-w-[100px]"
-                    >
-                        {categories.map(c => <option key={c} value={c}>{c}</option>)}
-                    </select>
-
-                    <button
-                        onClick={() => setIsCreateModalOpen(true)}
-                        className="flex-shrink-0 bg-primary text-primary-foreground font-black text-[10px] uppercase tracking-widest py-2 px-4 rounded-xl shadow-md hover:opacity-90 transition-all flex items-center gap-1.5"
-                    >
-                        <PlusIcon className="w-3.5 h-3.5"/> Host
-                    </button>
+                    {/* Host Button Row */}
+                    <div className="flex justify-end">
+                        <button
+                            onClick={() => setIsCreateModalOpen(true)}
+                            className="bg-primary text-primary-foreground font-black text-[10px] uppercase tracking-widest py-2.5 px-6 rounded-xl shadow-lg hover:opacity-90 transition-all flex items-center gap-2"
+                        >
+                            <PlusIcon className="w-4 h-4"/> Host Event
+                        </button>
+                    </div>
                 </div>
-            </div>
-        </div>
 
                 {/* Content Area */}
                 <div className="space-y-6 pt-2">
