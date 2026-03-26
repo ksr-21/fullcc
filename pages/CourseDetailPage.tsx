@@ -83,6 +83,7 @@ const CourseDetailPage: React.FC<CourseDetailPageProps> = ({
     const [selectedSessionDate, setSelectedSessionDate] = useState<number | null>(null);
     const [sessionLabel, setSessionLabel] = useState("");
     const [attendanceStatus, setAttendanceStatus] = useState<Record<string, AttendanceStatus>>({});
+    const [isAttendanceDirty, setIsAttendanceDirty] = useState(false);
     const [showSaveSuccess, setShowSaveSuccess] = useState(false);
 
     // Date state for Exporting CSV
@@ -183,6 +184,8 @@ const CourseDetailPage: React.FC<CourseDetailPageProps> = ({
 
     // Update attendance list when date or session changes
     useEffect(() => {
+        if (isAttendanceDirty) return; // Don't overwrite if user is actively editing
+
         const dayRecords = (course.attendanceRecords || []).filter(r => 
             new Date(r.date).toDateString() === new Date(attendanceDate).toDateString()
         ).sort((a, b) => a.date - b.date);
@@ -207,7 +210,7 @@ const CourseDetailPage: React.FC<CourseDetailPageProps> = ({
             setAttendanceStatus(newStatus);
             setSessionLabel("");
         }
-    }, [attendanceDate, selectedSessionDate, course.attendanceRecords, students]);
+    }, [attendanceDate, selectedSessionDate, course.attendanceRecords, students, isAttendanceDirty]);
 
     useEffect(() => {
         localStorage.setItem(`course_view_${course.id}`, displayMode);
@@ -236,12 +239,14 @@ const CourseDetailPage: React.FC<CourseDetailPageProps> = ({
         students.forEach(s => record.records[s.id] = { status: attendanceStatus[s.id] || 'present' });
         onTakeAttendance(course.id, record);
         setSelectedSessionDate(timestamp);
+        setIsAttendanceDirty(false);
         setShowSaveSuccess(true);
         setTimeout(() => setShowSaveSuccess(false), 3000);
     };
 
     const toggleAttendance = (studentId: string) => {
         if (!canManageAttendance) return;
+        setIsAttendanceDirty(true);
         setAttendanceStatus(prev => {
             const current = prev[studentId] || 'present';
             const next = current === 'present' ? 'absent' : current === 'absent' ? 'late' : 'present';
@@ -251,6 +256,7 @@ const CourseDetailPage: React.FC<CourseDetailPageProps> = ({
 
     const markAllStatus = (status: AttendanceStatus) => {
         if (!canManageAttendance) return;
+        setIsAttendanceDirty(true);
         const newStatus: Record<string, AttendanceStatus> = {};
         students.forEach(s => {
             newStatus[s.id] = status;

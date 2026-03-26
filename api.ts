@@ -258,15 +258,48 @@ export const db = {
     })
 };
 
+// Cloudinary Configuration
+const CLOUDINARY_CLOUD_NAME = (import.meta as any).env.VITE_CLOUDINARY_CLOUD_NAME;
+const CLOUDINARY_UPLOAD_PRESET = (import.meta as any).env.VITE_CLOUDINARY_UPLOAD_PRESET;
+
+export const uploadToCloudinary = async (file: File): Promise<string> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+    formData.append('resource_type', 'auto');
+
+    const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/auto/upload`, {
+        method: 'POST',
+        body: formData
+    });
+
+    if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error?.message || 'Upload failed');
+    }
+    const data = await response.json();
+    return data.secure_url;
+};
+
 export const storage = {
     ref: (path: string) => ({
         put: async (file: File) => {
-            const data = await api.upload(file);
-            return {
-                ref: {
-                    getDownloadURL: async () => data.url
-                }
-            };
+            try {
+                const url = await uploadToCloudinary(file);
+                return {
+                    ref: {
+                        getDownloadURL: async () => url
+                    }
+                };
+            } catch (err) {
+                // Fallback to backend upload if Cloudinary fails or is not configured
+                const data = await api.upload(file);
+                return {
+                    ref: {
+                        getDownloadURL: async () => data.fileUrl || data.url
+                    }
+                };
+            }
         },
         getDownloadURL: async () => "" // Mock
     }),

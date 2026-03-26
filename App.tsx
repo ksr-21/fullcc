@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { auth, FieldValue, FieldPath, db, api } from './api';
+import { auth, FieldValue, FieldPath, db, api, uploadToCloudinary } from './api';
 import { User, Post, Group, Story, Notice, Course, College, Conversation, UserTag, ReactionType } from './types';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
@@ -22,29 +22,6 @@ import SuperAdminPage from './pages/SuperAdminPage';
 import ConfessionsPage from './pages/ConfessionsPage';
 import PersonalNotesPage from './pages/PersonalNotesPage';
 import NoticeBoardPage from './pages/NoticeBoardPage';
-
-// Cloudinary Configuration
-const CLOUDINARY_CLOUD_NAME = (import.meta as any).env.VITE_CLOUDINARY_CLOUD_NAME;
-const CLOUDINARY_UPLOAD_PRESET = (import.meta as any).env.VITE_CLOUDINARY_UPLOAD_PRESET;
-
-const uploadToCloudinary = async (file: File): Promise<string> => {
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
-    formData.append('resource_type', 'auto'); 
-    
-    const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/auto/upload`, {
-        method: 'POST',
-        body: formData
-    });
-    
-    if (!response.ok) {
-        const err = await response.json();
-        throw new Error(err.error?.message || 'Upload failed');
-    }
-    const data = await response.json();
-    return data.secure_url;
-};
 
 // Helper to remove HTML tags and return clean text
 const stripHtml = (html: string) => {
@@ -404,31 +381,16 @@ function App() {
       }
   };
   const handleCreateUsersBatch = async (data: any[], collegeId?: string) => {
-      const errors: { email: string; reason: string }[] = [];
-      let successCount = 0;
-
-      for (const userData of data) {
-          try {
-              const invitePayload = normalizeInvitePayload(userData, collegeId ?? userData.collegeId ?? activeUser?.collegeId);
-              // Call backend API for validation (especially for students with yearOfStudy, division, rollNo)
-              await api.post('/invites', invitePayload);
-              
-              // Also update the local Mongo-backed data layer so the UI refreshes immediately
-              await db.collection('invites').add({
-                  ...invitePayload,
-                  createdAt: Date.now()
-              });
-              
-              successCount++;
-          } catch (err: any) {
-              errors.push({
-                  email: userData.email || 'unknown',
-                  reason: err?.message || 'Failed to create user'
-              });
-          }
+      try {
+          const users = data.map(userData => normalizeInvitePayload(userData, collegeId ?? userData.collegeId ?? activeUser?.collegeId));
+          const response = await api.post('/invites/batch', { users });
+          return response;
+      } catch (err: any) {
+          return {
+              successCount: 0,
+              errors: [{ email: 'Batch operation', reason: err?.message || 'Failed to process batch' }]
+          };
       }
-
-      return { successCount, errors };
   };
 
   const mergedConversations = useMemo(() => {
@@ -438,9 +400,20 @@ function App() {
       return Array.from(map.values());
   }, [conversations, groupConversations]);
 
-  const handleUpdateAnyUser = (uid: string, data: any) => {
-      const collection = registeredUsers[uid] ? 'users' : 'invites';
-      return handleUpdate(collection, uid, data);
+  const handleUpdateAnyUser = async (uid: string, data: any) => {
+      const isRegistered = !!registeredUsers[uid];
+      const collection = isRegistered ? 'users' : 'invites';
+      try {
+          await handleUpdate(collection, uid, data);
+      } catch (error: any) {
+          console.error(`Failed to update ${collection} with ID ${uid}:`, error);
+          // Fallback check: maybe they just registered?
+          if (!isRegistered && registeredUsers[uid]) {
+              await handleUpdate('users', uid, data);
+          } else {
+              throw error;
+          }
+      }
   };
 
   const refreshPosts = async () => {
