@@ -48,24 +48,16 @@ const GroupsPage: React.FC<GroupsPageProps> = ({ currentUser, groups, onNavigate
 
       <Header currentUser={currentUser} onLogout={handleLogout} onNavigate={onNavigate} currentPath={currentPath} />
       
-      <main className="flex-1 container mx-auto px-0 sm:px-4 lg:px-8 py-4 lg:py-8 pb-24 lg:pb-12 relative z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            {/* Left Sidebar */}
-            <div className="hidden lg:block lg:col-span-3">
-                <div className="sticky top-24 space-y-6">
-                    <LeftSidebar currentUser={currentUser} onNavigate={onNavigate} currentPath={currentPath} />
-                </div>
-            </div>
-
+      <main className="flex-1 container max-w-5xl mx-auto px-4 py-6 pb-24 lg:pb-12 relative z-10">
             {/* Main Content */}
-            <div className="lg:col-span-6 space-y-8">
+            <div className="space-y-8">
                 {/* Content Area */}
-                <div className="space-y-12 pb-10">
+                <div className="space-y-10 pb-10">
                     <div className="flex justify-between items-center mb-4">
                         <h1 className="text-2xl font-bold text-foreground">Groups</h1>
                         <button
                             onClick={() => setIsCreateModalOpen(true)}
-                            className="bg-primary text-primary-foreground font-bold text-xs uppercase tracking-widest py-2 px-4 rounded-xl shadow-lg hover:opacity-90 transition-all flex items-center gap-2"
+                            className="bg-primary text-primary-foreground font-black text-[10px] uppercase tracking-widest py-2 px-5 rounded-xl shadow-lg hover:opacity-90 transition-all flex items-center gap-2"
                         >
                             <PlusCircleIcon className="w-4 h-4"/> Create Group
                         </button>
@@ -100,7 +92,7 @@ const GroupsPage: React.FC<GroupsPageProps> = ({ currentUser, groups, onNavigate
                         <div className="h-8 w-1.5 bg-primary rounded-full"></div>
                         <h2 className="text-2xl font-bold text-foreground">Your Groups</h2>
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4">
                         {myGroups.map(group => (
                             <GroupCard 
                                 key={group.id} 
@@ -153,18 +145,6 @@ const GroupsPage: React.FC<GroupsPageProps> = ({ currentUser, groups, onNavigate
                 </div>
             </div>
 
-            {/* Right Sidebar */}
-            <div className="hidden lg:block lg:col-span-3">
-                <RightSidebar
-                    groups={groups}
-                    events={[]} // Pass events if available
-                    currentUser={currentUser}
-                    onNavigate={onNavigate}
-                    users={[]} // Pass users if available
-                    notices={[]} // Pass notices if available
-                />
-            </div>
-        </div>
       </main>
       
       <CreateGroupModal 

@@ -68,60 +68,48 @@ const OpportunitiesPage: React.FC<OpportunitiesPageProps> = ({ currentUser, user
     <div className="bg-background min-h-screen flex flex-col">
       <Header currentUser={currentUser} onLogout={handleLogout} onNavigate={onNavigate} currentPath={currentPath} />
       
-      {/* Hero Section */}
-      <div className="relative bg-gradient-to-r from-blue-600 via-indigo-700 to-purple-800 pt-12 pb-28 px-4 sm:px-6 overflow-hidden">
-          <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
-          {/* Abstract Shapes */}
-          <div className="absolute top-10 right-10 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-0 left-0 w-48 h-48 bg-blue-400/10 rounded-full blur-3xl"></div>
-
-          <div className="relative max-w-5xl mx-auto text-center text-white">
-              <h1 className="text-4xl md:text-6xl font-black tracking-tight mb-4 drop-shadow-md">Shape Your Future</h1>
-              <p className="text-blue-100 text-lg md:text-xl max-w-2xl mx-auto mb-8 font-medium">Find internships, track your skills, get mentorship, and launch your career.</p>
-              
-              <div className="max-w-2xl mx-auto relative group">
-                  <SearchIcon className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 z-10"/>
-                  <input 
-                    type="text" 
-                    placeholder="Search for jobs, skills, or mentors..." 
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full py-4 pl-12 pr-4 rounded-full bg-white text-gray-900 shadow-xl focus:outline-none focus:ring-4 focus:ring-blue-500/30 text-base font-medium transition-all placeholder:text-gray-400"
-                  />
-                  <div className="absolute inset-0 -z-10 bg-white/20 rounded-full blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-              </div>
-          </div>
-      </div>
-
-      <main className="flex-1 container mx-auto px-4 -mt-14 relative z-10 pb-24">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-              
-              {/* Left Navigation/Content Area (Full Width) */}
-              <div className="lg:col-span-12 space-y-8">
-                  {/* Navigation Tabs - Sticky on mobile if needed, but sticking with static for layout */}
-                  <div className="flex gap-3 overflow-x-auto no-scrollbar pb-4 px-1">
-                      <TabButton id="jobs" label="Jobs & Internships" icon={BriefcaseIcon} />
-                      <TabButton id="campus" label="Campus & Volunteer" icon={GlobeIcon} />
-                      <TabButton id="roadmaps" label="Roadmaps" icon={MapIcon} />
-                      <TabButton id="mentor" label="Mentorship & AI" icon={UserPlusIcon} />
-                      <TabButton id="projects" label="Projects" icon={CodeIcon} />
+      <main className="flex-1 container max-w-6xl mx-auto px-4 py-6 pb-24 lg:pb-12 relative z-10">
+          <div className="space-y-6">
+              {/* Compact Header Area */}
+              <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-card border border-border p-3 rounded-2xl shadow-sm">
+                  <div className="relative flex-1 w-full max-w-md group">
+                      <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4 z-10"/>
+                      <input
+                        type="text"
+                        placeholder="Search for jobs, skills, or mentors..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full py-2 pl-11 pr-4 rounded-xl bg-muted/50 text-foreground border border-transparent focus:border-primary/50 text-sm font-medium transition-all"
+                      />
                   </div>
 
+                  {/* Navigation Tabs */}
+                  <div className="flex gap-2 overflow-x-auto no-scrollbar px-1">
+                      <TabButton id="jobs" label="Jobs" icon={BriefcaseIcon} />
+                      <TabButton id="campus" label="Campus" icon={GlobeIcon} />
+                      <TabButton id="roadmaps" label="Roadmaps" icon={MapIcon} />
+                      <TabButton id="mentor" label="AI Mentor" icon={UserPlusIcon} />
+                      <TabButton id="projects" label="Projects" icon={CodeIcon} />
+                  </div>
+              </div>
+
+              {/* Left Navigation/Content Area (Full Width) */}
+              <div className="space-y-6">
                   {/* Content Views */}
                   <div className="min-h-[400px]">
                       {activeTab === 'jobs' && (
                           <div className="space-y-6 animate-fade-in">
                               <div className="flex justify-between items-center">
-                                  <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
+                                  <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
                                       Latest Opportunities 
                                       <span className="text-xs font-bold bg-primary/10 text-primary px-2 py-1 rounded-full">{jobListings.length}</span>
                                   </h2>
-                                  <button onClick={() => setIsCreateModalOpen(true)} className="text-sm font-bold bg-primary text-primary-foreground px-4 py-2 rounded-xl hover:bg-primary/90 transition-all shadow-md hover:shadow-lg flex items-center gap-2">
-                                      <PlusIcon className="w-4 h-4"/> Post Job
+                                  <button onClick={() => setIsCreateModalOpen(true)} className="text-xs font-black uppercase tracking-widest bg-primary text-primary-foreground px-4 py-2 rounded-xl hover:opacity-90 transition-all shadow-md flex items-center gap-2">
+                                      <PlusIcon className="w-3.5 h-3.5"/> Post Job
                                   </button>
                               </div>
                               
-                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4">
                                   {jobListings.length > 0 ? jobListings.map(opp => (
                                       <OpportunityCard 
                                           key={opp.id} 
@@ -146,15 +134,15 @@ const OpportunitiesPage: React.FC<OpportunitiesPageProps> = ({ currentUser, user
                       {activeTab === 'campus' && (
                           <div className="space-y-6 animate-fade-in">
                               <div className="flex justify-between items-center">
-                                  <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
+                                  <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
                                       Campus Roles
                                       <span className="text-xs font-bold bg-primary/10 text-primary px-2 py-1 rounded-full">{campusListings.length}</span>
                                   </h2>
-                                  <button onClick={() => setIsCreateModalOpen(true)} className="text-sm font-bold bg-primary text-primary-foreground px-4 py-2 rounded-xl hover:bg-primary/90 transition-all shadow-md hover:shadow-lg flex items-center gap-2">
-                                      <PlusIcon className="w-4 h-4"/> Post Role
+                                  <button onClick={() => setIsCreateModalOpen(true)} className="text-xs font-black uppercase tracking-widest bg-primary text-primary-foreground px-4 py-2 rounded-xl hover:opacity-90 transition-all shadow-md flex items-center gap-2">
+                                      <PlusIcon className="w-3.5 h-3.5"/> Post Role
                                   </button>
                               </div>
-                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                   {campusListings.map(opp => (
                                       <OpportunityCard 
                                           key={opp.id} 
@@ -180,13 +168,13 @@ const OpportunitiesPage: React.FC<OpportunitiesPageProps> = ({ currentUser, user
                       {activeTab === 'roadmaps' && (
                           <div className="space-y-6 animate-fade-in">
                               <div className="flex justify-between items-center">
-                                  <h2 className="text-2xl font-bold text-foreground">Career Roadmaps</h2>
-                                  <button onClick={() => setIsCreateRoadmapModalOpen(true)} className="text-sm font-bold bg-primary text-primary-foreground px-4 py-2 rounded-xl hover:bg-primary/90 transition-all shadow-md hover:shadow-lg flex items-center gap-2">
-                                      <PlusIcon className="w-4 h-4"/> Create Roadmap
+                                  <h2 className="text-xl font-bold text-foreground">Career Roadmaps</h2>
+                                  <button onClick={() => setIsCreateRoadmapModalOpen(true)} className="text-xs font-black uppercase tracking-widest bg-primary text-primary-foreground px-4 py-2 rounded-xl hover:opacity-90 transition-all shadow-md flex items-center gap-2">
+                                      <PlusIcon className="w-3.5 h-3.5"/> Create Roadmap
                                   </button>
                               </div>
                               
-                              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                                   {roadmaps.length > 0 ? roadmaps.map(map => (
                                       <div key={map.id} className="bg-card rounded-3xl border border-border overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 relative group flex flex-col h-full">
                                           <div className={`h-3 bg-gradient-to-r ${map.color || 'from-blue-500 to-cyan-500'}`}></div>
@@ -266,15 +254,15 @@ const OpportunitiesPage: React.FC<OpportunitiesPageProps> = ({ currentUser, user
                       {activeTab === 'projects' && (
                           <div className="space-y-6 animate-fade-in">
                               <div className="flex justify-between items-center">
-                                  <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
+                                  <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
                                       Student Projects
                                       <span className="text-xs font-bold bg-primary/10 text-primary px-2 py-1 rounded-full">{projectListings.length}</span>
                                   </h2>
-                                  <button onClick={() => setIsCreateProjectModalOpen(true)} className="text-sm font-bold bg-primary text-primary-foreground px-4 py-2 rounded-xl hover:bg-primary/90 transition-all shadow-md hover:shadow-lg flex items-center gap-2">
-                                      <PlusIcon className="w-4 h-4"/> Add Project
+                                  <button onClick={() => setIsCreateProjectModalOpen(true)} className="text-xs font-black uppercase tracking-widest bg-primary text-primary-foreground px-4 py-2 rounded-xl hover:opacity-90 transition-all shadow-md flex items-center gap-2">
+                                      <PlusIcon className="w-3.5 h-3.5"/> Add Project
                                   </button>
                               </div>
-                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                   {projectListings.length > 0 ? projectListings.map(proj => (
                                       <ProjectCard 
                                           key={proj.id} 

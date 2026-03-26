@@ -167,56 +167,33 @@ const EventsPage: React.FC<EventsPageProps> = (props) => {
 
       <Header currentUser={currentUser} onLogout={handleLogout} onNavigate={onNavigate} currentPath={currentPath} />
       
-      <main className="flex-1 container mx-auto px-0 sm:px-4 lg:px-8 py-4 lg:py-8 pb-24 lg:pb-12 relative z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            {/* Left Sidebar */}
-            <div className="hidden lg:block lg:col-span-3">
-                <div className="sticky top-24 space-y-6">
-                    <LeftSidebar currentUser={currentUser} onNavigate={onNavigate} currentPath={currentPath} />
-                </div>
-            </div>
-
+      <main className="flex-1 container max-w-5xl mx-auto px-4 py-6 pb-24 lg:pb-12 relative z-10">
             {/* Main Content */}
-            <div className="lg:col-span-6 space-y-8">
-                {/* Hero Header */}
-                <div className="relative bg-gradient-to-br from-indigo-900 via-purple-900 to-slate-900 rounded-[3rem] p-8 md:p-12 overflow-hidden shadow-2xl mb-8">
-                    <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
-                    <div className="relative z-10">
-                        <h1 className="text-3xl md:text-4xl font-black text-white tracking-tight mb-2">Campus Events</h1>
-                        <p className="text-blue-100 text-sm md:text-base max-w-lg mb-6">Discover workshops, parties, meetups, and competitions happening right now.</p>
-                        <button
-                            onClick={() => setIsCreateModalOpen(true)}
-                            className="bg-white text-indigo-900 font-black text-[10px] uppercase tracking-widest py-3 px-6 rounded-2xl shadow-xl hover:bg-indigo-50 transition-transform transform hover:scale-105 flex items-center gap-2"
-                        >
-                            <PlusIcon className="w-5 h-5"/> Host Event
-                        </button>
-                    </div>
-                </div>
-
-                {/* Search Header */}
-                <div className="px-4 sm:px-0">
-            <div className="max-w-6xl mx-auto bg-card/95 backdrop-blur-md border border-border shadow-lg rounded-2xl p-3 flex flex-col md:flex-row gap-3">
+            <div className="space-y-6">
+                {/* Compact Search Header with Host Button */}
+                <div className="px-0">
+            <div className="bg-card/95 backdrop-blur-md border border-border shadow-md rounded-2xl p-2.5 flex flex-col md:flex-row gap-2.5">
                 
                 {/* Search */}
                 <div className="relative flex-1">
-                    <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground pointer-events-none" />
+                    <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
                     <input 
                         type="text" 
                         placeholder="Search events..." 
-                        className="w-full bg-muted/50 hover:bg-muted border border-transparent focus:border-primary rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none transition-all"
+                        className="w-full bg-muted/50 hover:bg-muted border border-transparent focus:border-primary rounded-xl pl-9 pr-4 py-2 text-sm focus:outline-none transition-all"
                         value={searchTerm}
                         onChange={e => setSearchTerm(e.target.value)}
                     />
                 </div>
 
-                <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 md:pb-0">
+                <div className="flex gap-2 items-center overflow-x-auto no-scrollbar">
                     {/* Time Filter */}
-                    <div className="flex bg-muted/50 rounded-xl p-1">
+                    <div className="flex bg-muted/50 rounded-xl p-0.5">
                         {['upcoming', 'today', 'week', 'past'].map(t => (
                             <button
                                 key={t}
                                 onClick={() => setTimeFilter(t as any)}
-                                className={`px-3 py-1.5 rounded-lg text-xs font-bold capitalize transition-all ${timeFilter === t ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                                className={`px-2.5 py-1.5 rounded-lg text-[11px] font-bold capitalize transition-all ${timeFilter === t ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
                             >
                                 {t}
                             </button>
@@ -227,25 +204,32 @@ const EventsPage: React.FC<EventsPageProps> = (props) => {
                     <select 
                         value={categoryFilter}
                         onChange={(e) => setCategoryFilter(e.target.value)}
-                        className="bg-muted/50 hover:bg-muted border-transparent focus:border-primary rounded-xl px-3 py-2 text-sm font-semibold text-foreground outline-none cursor-pointer"
+                        className="bg-muted/50 hover:bg-muted border-transparent focus:border-primary rounded-xl px-2 py-1.5 text-xs font-bold text-foreground outline-none cursor-pointer min-w-[100px]"
                     >
                         {categories.map(c => <option key={c} value={c}>{c}</option>)}
                     </select>
+
+                    <button
+                        onClick={() => setIsCreateModalOpen(true)}
+                        className="flex-shrink-0 bg-primary text-primary-foreground font-black text-[10px] uppercase tracking-widest py-2 px-4 rounded-xl shadow-md hover:opacity-90 transition-all flex items-center gap-1.5"
+                    >
+                        <PlusIcon className="w-3.5 h-3.5"/> Host
+                    </button>
                 </div>
             </div>
         </div>
 
                 {/* Content Area */}
-                <div className="space-y-8 pt-4">
-                    <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+                <div className="space-y-6 pt-2">
+                    <div className="flex items-center justify-between mb-4">
+                        <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
                             {timeFilter === 'past' ? 'Past Events' : 'Upcoming Events'}
                             <span className="bg-primary/10 text-primary text-xs px-2 py-1 rounded-full">{filteredEvents.length}</span>
                         </h2>
                     </div>
 
                     {filteredEvents.length > 0 ? (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                             {filteredEvents.map(event => (
                                 <EventListingCard key={event.id} event={event} onNavigate={onNavigate} />
                             ))}
@@ -262,19 +246,6 @@ const EventsPage: React.FC<EventsPageProps> = (props) => {
                     )}
                 </div>
             </div>
-
-            {/* Right Sidebar */}
-            <div className="hidden lg:block lg:col-span-3">
-                <RightSidebar
-                    groups={groups}
-                    events={events}
-                    currentUser={currentUser}
-                    onNavigate={onNavigate}
-                    users={usersArray}
-                    notices={[]} // Pass notices if available
-                />
-            </div>
-        </div>
       </main>
 
       <CreatePostModal 

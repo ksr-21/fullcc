@@ -100,7 +100,12 @@ function App() {
   }, [activeUser]);
 
   useEffect(() => {
-    const handleHashChange = () => setCurrentPath(window.location.hash || '#/');
+    const handleHashChange = () => {
+        const nextPath = window.location.hash || '#/';
+        setCurrentPath(nextPath);
+        // Reset scroll position on navigation
+        window.scrollTo(0, 0);
+    };
     window.addEventListener('hashchange', handleHashChange);
 
     // Safety net: never stay on loading screen longer than 10 seconds

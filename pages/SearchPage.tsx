@@ -69,19 +69,11 @@ const SearchPage: React.FC<SearchPageProps> = (props) => {
 
       <Header currentUser={currentUser} onLogout={handleLogout} onNavigate={onNavigate} currentPath={currentPath} />
       
-      <main className="flex-1 container mx-auto px-0 sm:px-4 lg:px-8 py-4 lg:py-8 pb-24 lg:pb-12 relative z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            {/* Left Sidebar */}
-            <div className="hidden lg:block lg:col-span-3">
-                <div className="sticky top-24 space-y-6">
-                    <LeftSidebar currentUser={currentUser} onNavigate={onNavigate} currentPath={currentPath} />
-                </div>
-            </div>
-
+      <main className="flex-1 container max-w-5xl mx-auto px-4 py-6 pb-24 lg:pb-12 relative z-10">
             {/* Main Content */}
-            <div className="lg:col-span-6 space-y-8">
+            <div className="space-y-6">
                 {/* Search Bar Area */}
-                <div className="px-4 sm:px-0">
+                <div className="px-0">
                     <div className="relative group">
                         <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
                         <input
@@ -286,18 +278,6 @@ const SearchPage: React.FC<SearchPageProps> = (props) => {
                 </div>
             </div>
 
-            {/* Right Sidebar */}
-            <div className="hidden lg:block lg:col-span-3">
-                <RightSidebar
-                    groups={groups}
-                    events={posts.filter(p => p.isEvent)}
-                    currentUser={currentUser}
-                    onNavigate={onNavigate}
-                    users={usersArray}
-                    notices={[]} // Pass notices if available
-                />
-            </div>
-        </div>
       </main>
       <BottomNavBar currentUser={currentUser} onNavigate={onNavigate} currentPage={currentPath}/>
     </div>
