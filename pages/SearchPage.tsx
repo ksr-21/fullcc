@@ -40,16 +40,27 @@ const SearchPage: React.FC<SearchPageProps> = (props) => {
   const usersMap = useMemo(() => Object.fromEntries(users.map(u => [u.id, u])), [users]);
 
   const results = useMemo(() => {
-      if (!searchTerm.trim()) return { people: [], groups: [], events: [] };
+      if (!searchTerm.trim()) return { people: [], groups: [], posts: [] };
       const lower = searchTerm.toLowerCase();
       return {
-          people: users.filter(u => u.name.toLowerCase().includes(lower) || u.department.toLowerCase().includes(lower)),
-          groups: groups.filter(g => g.name.toLowerCase().includes(lower) || g.description.toLowerCase().includes(lower)),
-          events: posts.filter(p => p.isEvent && (p.eventDetails?.title.toLowerCase().includes(lower) || p.content?.toLowerCase().includes(lower)))
+          people: users.filter(u =>
+            (u.name && u.name.toLowerCase().includes(lower)) ||
+            (u.department && u.department.toLowerCase().includes(lower))
+          ),
+          groups: groups.filter(g =>
+            (g.name && g.name.toLowerCase().includes(lower)) ||
+            (g.description && g.description.toLowerCase().includes(lower))
+          ),
+          posts: posts.filter(p =>
+            (p.content && p.content.toLowerCase().includes(lower)) ||
+            (p.eventDetails?.title && p.eventDetails.title.toLowerCase().includes(lower)) ||
+            (p.opportunityDetails?.title && p.opportunityDetails.title.toLowerCase().includes(lower)) ||
+            (p.projectDetails?.title && p.projectDetails.title.toLowerCase().includes(lower))
+          )
       };
   }, [users, groups, posts, searchTerm]);
 
-  const hasResults = results.people.length > 0 || results.groups.length > 0 || results.events.length > 0;
+  const hasResults = results.people.length > 0 || results.groups.length > 0 || results.posts.length > 0;
 
   const usersArray = useMemo(() => Object.values(users), [users]);
 
@@ -94,12 +105,12 @@ const SearchPage: React.FC<SearchPageProps> = (props) => {
 
                 {/* Tabs */}
                 <div className="px-4 sm:px-0 flex gap-3 overflow-x-auto no-scrollbar">
-                    {['all', 'people', 'groups', 'events'].map(tab => (
+                    {['all', 'people', 'groups', 'posts'].map(tab => (
                         <button
                             key={tab}
                             onClick={() => setActiveTab(tab as any)}
                             className={`px-6 py-2.5 rounded-full text-sm font-black uppercase tracking-widest transition-all border ${
-                                activeTab === tab
+                                activeTab === tab || (tab === 'posts' && activeTab === 'events')
                                 ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20'
                                 : 'bg-card text-muted-foreground border-border/50 hover:bg-muted'
                             }`}
@@ -259,14 +270,14 @@ const SearchPage: React.FC<SearchPageProps> = (props) => {
                 </div>
             )}
 
-            {/* Events Results */}
-            {(activeTab === 'all' || activeTab === 'events') && results.events.length > 0 && (
+            {/* Posts Results */}
+            {(activeTab === 'all' || activeTab === 'posts' || activeTab === 'events') && results.posts.length > 0 && (
                         <div className="animate-fade-in">
                             <h3 className="text-lg font-bold text-foreground mb-4 px-1 flex items-center gap-2">
-                        <span className="bg-amber-500/10 text-amber-600 px-2 py-1 rounded text-xs">Events</span>
+                        <span className="bg-amber-500/10 text-amber-600 px-2 py-1 rounded text-xs">Posts</span>
                             </h3>
                             <Feed
-                        posts={results.events}
+                        posts={results.posts}
                                 users={usersMap}
                                 currentUser={currentUser}
                                 groups={groups}

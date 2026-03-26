@@ -24,12 +24,14 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, currentUser, u
 
   // State for "Send as Message" tab
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
 
   useEffect(() => {
     if (isOpen) {
         setActiveTab(defaultTab || 'share');
         setCommentary('');
         setSearchTerm('');
+        setSelectedUserIds([]);
     }
   }, [isOpen, defaultTab]);
 
@@ -52,6 +54,19 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, currentUser, u
       : { type: 'group' as 'group', id: shareTarget };
     onSharePost(postToShare, commentary, target);
     onClose();
+  };
+
+  const handleSendAsMessages = () => {
+    selectedUserIds.forEach(uid => {
+      onShareToUser(uid);
+    });
+    onClose();
+  };
+
+  const toggleUserSelection = (uid: string) => {
+    setSelectedUserIds(prev =>
+      prev.includes(uid) ? prev.filter(id => id !== uid) : [...prev, uid]
+    );
   };
 
   return (
@@ -104,7 +119,7 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, currentUser, u
 
         {activeTab === 'message' && (
            <div className="flex flex-col flex-1 overflow-hidden">
-                <div className="p-4">
+                <div className="p-4 space-y-3">
                     <input
                     type="text"
                     value={searchTerm}
@@ -112,14 +127,34 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, currentUser, u
                     placeholder="Search for people..."
                     className="w-full bg-input border border-border rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
                     />
+
+                    {selectedUserIds.length > 0 && (
+                        <div className="flex gap-2 overflow-x-auto no-scrollbar py-1">
+                            {selectedUserIds.map(uid => {
+                                const user = users.find(u => u.id === uid);
+                                if (!user) return null;
+                                return (
+                                    <div key={uid} className="flex-shrink-0 relative group">
+                                        <Avatar src={user.avatarUrl} name={user.name} size="sm" />
+                                        <button
+                                            onClick={() => toggleUserSelection(uid)}
+                                            className="absolute -top-1 -right-1 bg-destructive text-white rounded-full w-4 h-4 flex items-center justify-center text-[10px] shadow-sm"
+                                        >
+                                            ×
+                                        </button>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
                 </div>
                 <div className="flex-1 overflow-y-auto no-scrollbar">
                     {filteredUsers.length > 0 ? (
                         filteredUsers.map(user => (
                             <div
                                 key={user.id}
-                                className="flex items-center justify-between p-3 cursor-pointer hover:bg-muted"
-                                onClick={() => onShareToUser(user.id)}
+                                className={`flex items-center justify-between p-3 cursor-pointer transition-colors ${selectedUserIds.includes(user.id) ? 'bg-primary/10' : 'hover:bg-muted'}`}
+                                onClick={() => toggleUserSelection(user.id)}
                             >
                                 <div className="flex items-center space-x-3">
                                     <Avatar src={user.avatarUrl} name={user.name} size="md" />
@@ -128,13 +163,25 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, currentUser, u
                                         <p className="text-sm text-text-muted">{user.department}</p>
                                     </div>
                                 </div>
-                                <SendIcon className="w-5 h-5 text-text-muted"/>
+                                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${selectedUserIds.includes(user.id) ? 'bg-primary border-primary' : 'border-border'}`}>
+                                    {selectedUserIds.includes(user.id) && <span className="text-white text-[10px] font-black">✓</span>}
+                                </div>
                             </div>
                         ))
                     ) : (
                         <p className="text-center text-text-muted p-8">No users found.</p>
                     )}
                 </div>
+                {selectedUserIds.length > 0 && (
+                    <div className="p-4 border-t border-border">
+                        <button
+                            onClick={handleSendAsMessages}
+                            className="w-full bg-primary text-primary-foreground font-black uppercase tracking-widest text-xs py-3 rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-[0.98]"
+                        >
+                            Send to {selectedUserIds.length} {selectedUserIds.length === 1 ? 'person' : 'people'}
+                        </button>
+                    </div>
+                )}
            </div>
         )}
 

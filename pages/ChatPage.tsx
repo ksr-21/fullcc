@@ -364,10 +364,10 @@ const ChatPage: React.FC<ChatPageProps> = (props) => {
                     <div className="flex-1 overflow-y-auto custom-scrollbar px-2 pb-20 lg:pb-2">
                         {(pinnedChats.length + groupChats.length + directChats.length) > 0 ? (
                             <div className="space-y-4">
-                                {pinnedChats.length > 0 && (
+                                {directChats.length > 0 && (
                                     <div className="space-y-1">
-                                        <div className="px-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Pinned</div>
-                                        {pinnedChats.map(convo => renderChatRow(convo as any, true))}
+                                        <div className="px-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Direct</div>
+                                        {directChats.map(convo => renderChatRow(convo as any, false))}
                                     </div>
                                 )}
                                 {groupChats.length > 0 && (
@@ -376,10 +376,10 @@ const ChatPage: React.FC<ChatPageProps> = (props) => {
                                         {groupChats.map(convo => renderChatRow(convo as any, false))}
                                     </div>
                                 )}
-                                {directChats.length > 0 && (
+                                {pinnedChats.length > 0 && (
                                     <div className="space-y-1">
-                                        <div className="px-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Direct</div>
-                                        {directChats.map(convo => renderChatRow(convo as any, false))}
+                                        <div className="px-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Pinned</div>
+                                        {pinnedChats.map(convo => renderChatRow(convo as any, true))}
                                     </div>
                                 )}
                             </div>

@@ -84,7 +84,7 @@ const OpportunitiesPage: React.FC<OpportunitiesPageProps> = ({ currentUser, user
                   </div>
 
                   {/* Navigation Tabs */}
-                  <div className="flex gap-2 overflow-x-auto no-scrollbar px-1">
+                  <div className="flex gap-2 overflow-x-auto scrollbar-hide px-1 max-w-full pb-1">
                       <TabButton id="jobs" label="Jobs" icon={BriefcaseIcon} />
                       <TabButton id="campus" label="Campus" icon={GlobeIcon} />
                       <TabButton id="roadmaps" label="Roadmaps" icon={MapIcon} />
