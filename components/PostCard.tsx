@@ -119,7 +119,7 @@ const Lightbox: React.FC<{ images: string[]; startIndex: number; onClose: () => 
 };
 
 const PostCard: React.FC<PostCardProps> = (props) => {
-  const { post, author, currentUser, users, onReaction, onAddComment, onDeletePost, onDeleteComment, onCreateOrOpenConversation, onSharePostAsMessage, onSharePost, onToggleSavePost, groups, onNavigate, animationIndex } = props;
+  const { post, author, currentUser, users, onReaction, onAddComment, onDeletePost, onDeleteComment, onCreateOrOpenConversation, onSharePostAsMessages, onSharePost, onToggleSavePost, groups, onNavigate, animationIndex } = props;
   const [showComments, setShowComments] = useState(false);
   const [shareModalState, setShareModalState] = useState<{isOpen: boolean, defaultTab: 'share' | 'message'}>({isOpen: false, defaultTab: 'message'});
   const [isReactionsModalOpen, setIsReactionsModalOpen] = useState(false);
@@ -198,6 +198,8 @@ const PostCard: React.FC<PostCardProps> = (props) => {
     return null;
   }, [post.reactions, currentUser.id]);
 
+  const [optimisticReactions, setOptimisticReactions] = useState(post.reactions || {});
+
   const reactionSummary = useMemo(() => {
       const reactions = optimisticReactions;
       let total = 0;
@@ -210,11 +212,17 @@ const PostCard: React.FC<PostCardProps> = (props) => {
   const handleMouseLeave = () => { pickerTimerRef.current = setTimeout(() => setPickerVisible(false), 300); };
   const handleTouchStart = () => { if (!isReadOnly) { wasLongPress.current = false; pickerTimerRef.current = setTimeout(() => { wasLongPress.current = true; setPickerVisible(true); }, 500); } };
   const handleTouchEnd = () => { if (pickerTimerRef.current) clearTimeout(pickerTimerRef.current); setTimeout(() => setPickerVisible(false), 1500); };
-  const [optimisticReactions, setOptimisticReactions] = useState(post.reactions || {});
 
   useEffect(() => {
     setOptimisticReactions(post.reactions || {});
   }, [post.reactions]);
+
+  const currentOptimisticReaction = useMemo(() => {
+    for (const reaction of reactionsList) {
+        if (optimisticReactions[reaction.type]?.includes(currentUser.id)) return reaction;
+    }
+    return null;
+  }, [optimisticReactions, currentUser.id]);
 
   const handleLikeButtonClick = () => {
     if (isReadOnly || wasLongPress.current) {
@@ -243,12 +251,6 @@ const PostCard: React.FC<PostCardProps> = (props) => {
     onReaction(post.id, reaction);
   };
 
-  const currentOptimisticReaction = useMemo(() => {
-    for (const reaction of reactionsList) {
-        if (optimisticReactions[reaction.type]?.includes(currentUser.id)) return reaction;
-    }
-    return null;
-  }, [optimisticReactions, currentUser.id]);
 
   const renderReactionsButton = (isConfession = false) => {
     const btnClass = isConfession ? "text-white/80 hover:text-white hover:bg-white/10" : `transition-all ${currentOptimisticReaction ? currentOptimisticReaction.color + ' bg-primary/5 border-primary/20' : 'text-muted-foreground hover:text-primary bg-muted/40 hover:bg-muted border-transparent'}`;
