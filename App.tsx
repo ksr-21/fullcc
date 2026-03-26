@@ -22,6 +22,7 @@ import SuperAdminPage from './pages/SuperAdminPage';
 import ConfessionsPage from './pages/ConfessionsPage';
 import PersonalNotesPage from './pages/PersonalNotesPage';
 import NoticeBoardPage from './pages/NoticeBoardPage';
+import NotificationsPage from './pages/NotificationsPage';
 
 // Helper to remove HTML tags and return clean text
 const stripHtml = (html: string) => {
@@ -66,6 +67,21 @@ function App() {
   const pendingSystemGroupKeysRef = useRef<Set<string>>(new Set());
   
   const users = useMemo(() => ({ ...registeredUsers, ...invitedUsers }), [registeredUsers, invitedUsers]);
+
+  useMemo(() => {
+      if (!currentUser) return 0;
+      const count = notices.filter(n => {
+          const isForMyDept = n.targetDept === currentUser.department || n.targetDept === 'All' || !n.targetDept;
+          const isGlobal = n.collegeId === currentUser.collegeId;
+          if (currentUser.tag === 'Student' && n.targetAudience === 'Student') {
+              if (n.targetYear && n.targetYear !== currentUser.yearOfStudy) return false;
+              if (n.targetDiv && n.targetDiv !== currentUser.division) return false;
+          }
+          return (isForMyDept || isGlobal);
+      }).filter(n => !(currentUser.readNoticeIds || []).includes(n.id)).length;
+      (window as any).unreadNoticesCount = count;
+      return count;
+  }, [notices, currentUser]);
 
   const activeUser = useMemo(() => {
       if (!currentUser) return null;
@@ -473,6 +489,13 @@ function App() {
       return ref.id;
   };
   
+  const handleMarkNoticeAsRead = async (noticeId: string) => {
+      if (!activeUser) return;
+      const readNoticeIds = activeUser.readNoticeIds || [];
+      if (readNoticeIds.includes(noticeId)) return;
+      await handleUpdate('users', activeUser.id, { readNoticeIds: FieldValue.arrayUnion(noticeId) });
+  };
+
   const handleToggleFollowGroup = async (gid: string) => {
       if (!activeUser) return;
       const following = activeUser.followingGroups || [];
@@ -731,6 +754,8 @@ function App() {
           return <SearchPage currentUser={activeUser} users={Object.values(users)} posts={posts} groups={groups} onNavigate={handleNavigate} currentPath={currentPath} {...commonFeedProps} />;
       case '#/notes':
           return <PersonalNotesPage currentUser={activeUser} onNavigate={handleNavigate} currentPath={currentPath} onCreateNote={(t, c) => handleUpdate('users', activeUser.id, { personalNotes: FieldValue.arrayUnion({ id: Date.now().toString(), title: t, content: c, timestamp: Date.now() }) })} onUpdateNote={(nid, t, c) => { const notes = activeUser.personalNotes?.map(n => n.id === nid ? { ...n, title: t, content: c, timestamp: Date.now() } : n) || []; handleUpdate('users', activeUser.id, { personalNotes: notes }); }} onDeleteNote={(nid) => { const notes = activeUser.personalNotes?.filter(n => n.id !== nid) || []; handleUpdate('users', activeUser.id, { personalNotes: notes }); }} />;
+      case '#/notifications':
+          return <NotificationsPage currentUser={activeUser} notices={notices} courses={courses} colleges={colleges} users={users} onNavigate={handleNavigate} currentPath={currentPath} onCreateNotice={(data: any) => handleCreate('notices', { ...data, authorId: activeUser.id, collegeId: activeUser.collegeId, timestamp: Date.now() })} onDeleteNotice={(id: string) => handleDelete('notices', id)} onMarkAsRead={handleMarkNoticeAsRead} />;
       default:
           if (path.startsWith('#/profile/')) { const uid = path.split('/')[2]; return <ProfilePage profileUserId={uid} currentUser={activeUser} users={users} posts={posts} groups={groups} colleges={colleges} courses={courses} onNavigate={handleNavigate} currentPath={currentPath} onAddPost={(d) => handleCreate('posts', {...d, authorId: activeUser.id, collegeId: activeUser.collegeId, timestamp: Date.now()})} onAddAchievement={(a) => handleUpdate('users', activeUser.id, { achievements: FieldValue.arrayUnion(a) })} onAddInterest={(i) => handleUpdate('users', activeUser.id, { interests: FieldValue.arrayUnion(i) })} onUpdateProfile={async (d, f) => { if (!activeUser) return; let updateData: any = { ...d }; if (f) { try { const avatarUrl = await uploadToCloudinary(f); updateData.avatarUrl = avatarUrl; } catch (err) { console.error("Avatar upload failed", err); } } await handleUpdate('users', activeUser.id, updateData); }} {...commonFeedProps} />; }
           

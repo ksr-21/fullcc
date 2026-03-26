@@ -47,6 +47,7 @@ export type User = {
   tempPassword?: string; // Temporary password set by HOD for signup verification
   // FIX: Added personalNotes property to User type
   personalNotes?: PersonalNote[];
+  readNoticeIds?: string[];
 }
 
 export type TimeSlot = {
@@ -151,6 +152,9 @@ export type Post = {
         attendees?: string[]; // User IDs
         tags?: string[];
         maxSeats?: number;
+        agenda?: { time: string; activity: string; details?: string }[];
+        registrationType?: 'internal' | 'external';
+        externalRegistrationLink?: string;
     };
     isConfession?: boolean;
     confessionMood?: ConfessionMood;

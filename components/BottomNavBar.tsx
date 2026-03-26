@@ -19,11 +19,11 @@ const BottomNavBar: React.FC<BottomNavBarProps> = ({ currentUser, onNavigate, cu
   const longPressTimer = useRef<any>(null);
   const isLongPress = useRef(false);
 
-  // Removed Chat and Academics. Renamed Opportunities to Career for fit.
+  // Updated navigation for mobile bottom bar.
   const navItems = [
     { path: '#/home', icon: HomeIcon, activeIcon: HomeIconSolid, label: 'Home' },
-    { path: '#/search', icon: SearchIcon, activeIcon: SearchIconSolid, label: 'Search' },
-    { path: '#/groups', icon: UsersIcon, activeIcon: UsersIconSolid, label: 'Groups' },
+    { path: '#/academics', icon: BookOpenIcon, activeIcon: BookOpenIconSolid, label: 'Academics' },
+    { path: '#/chat', icon: MessageIcon, activeIcon: MessageIconSolid, label: 'Chat' },
     { path: '#/events', icon: CalendarIcon, activeIcon: CalendarIconSolid, label: 'Events' },
     { path: '#/opportunities', icon: BriefcaseIcon, activeIcon: BriefcaseIconSolid, label: 'Career' },
     { path: `#/profile/${currentUser.id}`, icon: UserIcon, activeIcon: UserIconSolid, label: 'Profile' },

@@ -300,24 +300,46 @@ const PostCard: React.FC<PostCardProps> = (props) => {
         </div>
         <div className="px-6 pb-4">
             {post.isEvent && post.eventDetails && (
-                 <div className="mb-6 rounded-[2.5rem] overflow-hidden relative shadow-2xl group/event cursor-pointer transform transition-all duration-700 hover:scale-[1.02]">
-                    <div className="absolute inset-0 bg-gradient-to-br from-primary via-teal-700 to-secondary"></div>
-                    <div className="relative p-8 text-white flex flex-col sm:flex-row gap-8 items-center">
-                        <div className="flex-shrink-0 bg-white/10 backdrop-blur-xl rounded-[2rem] p-5 text-center min-w-[100px] border border-white/20 shadow-2xl">
-                            <span className="block text-xs font-black uppercase tracking-[0.3em] opacity-80 mb-1">{new Date(post.eventDetails.date).toLocaleString('default', { month: 'short' })}</span>
-                            <span className="block text-5xl font-black leading-none drop-shadow-xl">{new Date(post.eventDetails.date).getDate()}</span>
+                 <div
+                    onClick={() => onNavigate(`#/events/${post.id}`)}
+                    className="mb-6 rounded-[2rem] overflow-hidden relative shadow-lg group/event cursor-pointer transform transition-all duration-500 hover:scale-[1.01] border border-border/50"
+                 >
+                    <div className="aspect-square w-full relative">
+                        {post.mediaUrls && post.mediaUrls.length > 0 ? (
+                            <img src={post.mediaUrls[0]} alt="Event" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                        ) : (
+                            <div className="w-full h-full bg-gradient-to-br from-primary via-indigo-600 to-secondary flex items-center justify-center">
+                                <CalendarIcon className="w-20 h-20 text-white/20" />
+                            </div>
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div>
+
+                        {/* Compact Date Overlay */}
+                        <div className="absolute top-4 left-4 bg-white/10 backdrop-blur-md rounded-2xl p-3 text-center min-w-[64px] border border-white/20 shadow-xl">
+                            <span className="block text-[10px] font-black uppercase tracking-widest text-white/80 mb-0.5">{new Date(post.eventDetails.date).toLocaleString('default', { month: 'short' })}</span>
+                            <span className="block text-2xl font-black text-white leading-none">{new Date(post.eventDetails.date).getDate()}</span>
                         </div>
-                        <div className="flex-1 min-w-0 text-center sm:text-left">
-                            <h3 className="text-3xl font-black leading-tight tracking-tighter mb-4 drop-shadow-lg">{post.eventDetails.title}</h3>
-                            <div className="flex flex-wrap justify-center sm:justify-start items-center gap-4 text-xs font-black uppercase tracking-widest opacity-90">
-                                <span className="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-full border border-white/10"><ClockIcon className="w-4 h-4"/> {new Date(post.eventDetails.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
-                                <span className="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-full border border-white/10"><MapPinIcon className="w-4 h-4"/> {post.eventDetails.location}</span>
+
+                        {/* Event Title & Info Overlay */}
+                        <div className="absolute bottom-0 left-0 right-0 p-6">
+                            <h3 className="text-2xl font-black text-white leading-tight tracking-tight mb-3 drop-shadow-lg line-clamp-2">{post.eventDetails.title}</h3>
+                            <div className="flex flex-wrap items-center gap-3">
+                                <div className="flex items-center gap-1.5 bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10 text-[10px] font-black uppercase tracking-widest text-white">
+                                    <ClockIcon className="w-3.5 h-3.5" /> {new Date(post.eventDetails.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                                </div>
+                                <div className="flex items-center gap-1.5 bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10 text-[10px] font-black uppercase tracking-widest text-white max-w-[150px]">
+                                    <MapPinIcon className="w-3.5 h-3.5" /> <span className="truncate">{post.eventDetails.location}</span>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div className="bg-black/20 backdrop-blur-md p-4 flex justify-between items-center border-t border-white/10 relative z-10">
-                        {countdown && <span className="text-[10px] font-black uppercase tracking-widest px-4 py-1.5 rounded-full bg-amber-400 text-black shadow-lg animate-pulse">{countdown}</span>}
-                        {post.eventDetails.link && <a href={post.eventDetails.link} target="_blank" rel="noopener noreferrer" className="bg-white text-primary px-8 py-2.5 rounded-full font-black text-xs uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-xl">Details</a>}
+
+                        {countdown && (
+                            <div className="absolute top-4 right-4">
+                                <span className="text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full bg-amber-400 text-black shadow-lg animate-pulse">
+                                    {countdown}
+                                </span>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}
