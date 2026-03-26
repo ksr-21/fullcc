@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import ReactDOM from 'react-dom'; 
+import { createPortal } from 'react-dom';
 import type { User, Post, Group, Story, Notice, ReactionType } from '../types';
 import Header from '../components/Header';
 import Feed from '../components/Feed';
@@ -32,7 +32,7 @@ const ImageLightbox = ({ src, onClose }: { src: string | null, onClose: () => vo
     if (!src) return null;
 
     // Use React Portal + Inline Z-Index to force it above everything
-    return ReactDOM.createPortal(
+    return createPortal(
         <div 
             style={{ zIndex: 2147483647 }} // Maximum allowable Z-Index in browsers
             className="fixed inset-0 bg-black/95 backdrop-blur-md flex items-center justify-center p-4 sm:p-8 animate-fade-in touch-none" 
