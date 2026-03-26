@@ -171,12 +171,33 @@ export const createInvitesBatch = async (req, res) => {
 
 export const updateInvite = async (req, res) => {
   try {
-    const mongoUpdate = transformUpdate(req.body);
-    const invite = await Invite.findByIdAndUpdate(req.params.id, mongoUpdate, { new: true });
+    const updateData = { ...req.body };
+
+    // Normalize Student specific fields if present
+    if (updateData.yearOfStudy || updateData.year) {
+      const yr = updateData.yearOfStudy || updateData.year;
+      updateData.yearOfStudy = Number(yr);
+      updateData.year = Number(yr);
+    }
+    if (updateData.division || updateData.div) {
+      const d = updateData.division || updateData.div;
+      updateData.division = d;
+      updateData.div = d;
+    }
+
+    const mongoUpdate = transformUpdate(updateData);
+
+    // Use the base Invite model but with strict: false to allow discriminator fields
+    const invite = await Invite.findByIdAndUpdate(
+      req.params.id,
+      mongoUpdate,
+      { new: true, strict: false }
+    );
+
     if (!invite) return res.status(404).json({ message: 'Invite not found' });
     res.json(invite);
   } catch (error) {
     console.error('updateInvite error', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Server error: ' + error.message });
   }
 };

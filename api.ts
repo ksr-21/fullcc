@@ -284,21 +284,35 @@ export const uploadToCloudinary = async (file: File): Promise<string> => {
 export const storage = {
     ref: (path: string) => ({
         put: async (file: File) => {
+            // Check for Cloudinary configuration
+            const hasCloudinary = !!CLOUDINARY_CLOUD_NAME && !!CLOUDINARY_UPLOAD_PRESET && CLOUDINARY_CLOUD_NAME !== 'undefined';
+
+            if (hasCloudinary) {
+                try {
+                    const url = await uploadToCloudinary(file);
+                    return {
+                        ref: {
+                            getDownloadURL: async () => url
+                        }
+                    };
+                } catch (err: any) {
+                    console.warn('Cloudinary upload failed, falling back to local backend:', err.message);
+                }
+            } else {
+                console.info('Cloudinary not configured, using local backend storage.');
+            }
+
+            // Fallback to backend upload if Cloudinary fails or is not configured
             try {
-                const url = await uploadToCloudinary(file);
-                return {
-                    ref: {
-                        getDownloadURL: async () => url
-                    }
-                };
-            } catch (err) {
-                // Fallback to backend upload if Cloudinary fails or is not configured
                 const data = await api.upload(file);
                 return {
                     ref: {
-                        getDownloadURL: async () => data.fileUrl || data.url
+                        getDownloadURL: async () => data.fileUrl || data.url || data.uri
                     }
                 };
+            } catch (fallbackErr: any) {
+                console.error('All upload methods failed:', fallbackErr.message);
+                throw fallbackErr;
             }
         },
         getDownloadURL: async () => "" // Mock
