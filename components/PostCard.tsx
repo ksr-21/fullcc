@@ -278,16 +278,13 @@ const PostCard: React.FC<PostCardProps> = (props) => {
       <div className="relative bg-card rounded-[3rem] shadow-sm border border-border/50 overflow-hidden transition-all duration-500 hover:shadow-2xl hover:-translate-y-1">
         <div className="flex items-center justify-between p-6">
             <div className="flex items-center space-x-4 cursor-pointer group/author" onClick={() => onNavigate(`#/profile/${author.id}`)}>
-                <div className="relative p-1 rounded-[1.25rem] bg-gradient-to-tr from-primary/20 to-secondary/20 group-hover/author:from-primary group-hover/author:to-secondary transition-all duration-500">
-                    <Avatar src={author.avatarUrl} name={author.name} size="md" className="w-12 h-12 rounded-[1.1rem] ring-4 ring-card"/>
-                </div>
+                <Avatar src={author.avatarUrl} name={author.name} size="md" className="w-10 h-10 rounded-full"/>
                 <div>
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
-                        <p className="font-black text-foreground text-lg tracking-tight group-hover/author:text-primary transition-colors">{author.name}</p>
-                        <span className="hidden sm:block text-muted-foreground/30 font-black tracking-widest">•</span>
-                        <span className={`text-[10px] font-black px-2.5 py-1 rounded-lg uppercase tracking-widest border ${author.tag === 'Student' ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'}`}>{author.department || author.tag}</span>
+                    <div className="flex items-center gap-2">
+                        <p className="font-black text-foreground text-sm tracking-tight group-hover/author:text-primary transition-colors">{author.name}</p>
+                        <span className="text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-md bg-primary/10 text-primary border border-primary/20">{author.tag}</span>
                     </div>
-                    <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em] mt-1">{formatTimestamp(post.timestamp)} {post.groupId && <><span className="px-2 font-bold opacity-30">/</span><span className="text-primary hover:underline" onClick={(e) => {e.stopPropagation(); onNavigate(`#/groups/${post.groupId}`)}}>{groups.find(g => g.id === post.groupId)?.name}</span></>}</p>
+                    <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">{author.department?.split(' ')[0]} • {formatTimestamp(post.timestamp)}</p>
                 </div>
             </div>
             <button onClick={() => setIsOptionsOpen(!isOptionsOpen)} className="text-muted-foreground hover:bg-muted p-3 rounded-full transition-all active:rotate-90"><OptionsIcon className="w-6 h-6" /></button>
@@ -302,48 +299,35 @@ const PostCard: React.FC<PostCardProps> = (props) => {
             {post.isEvent && post.eventDetails && (
                  <div
                     onClick={() => onNavigate(`#/events/${post.id}`)}
-                    className="mb-6 rounded-[2rem] overflow-hidden relative shadow-lg group/event cursor-pointer transform transition-all duration-500 hover:scale-[1.01] border border-border/50"
+                    className="mb-6 rounded-3xl overflow-hidden bg-muted/20 border border-border/40 p-5 group/event cursor-pointer transition-all hover:bg-muted/30"
                  >
-                    <div className="aspect-square w-full relative">
-                        {post.mediaUrls && post.mediaUrls.length > 0 ? (
-                            <img src={post.mediaUrls[0]} alt="Event" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                        ) : (
-                            <div className="w-full h-full bg-gradient-to-br from-primary via-indigo-600 to-secondary flex items-center justify-center">
-                                <CalendarIcon className="w-20 h-20 text-white/20" />
-                            </div>
-                        )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div>
-
-                        {/* Compact Date Overlay */}
-                        <div className="absolute top-4 left-4 bg-white/10 backdrop-blur-md rounded-2xl p-3 text-center min-w-[64px] border border-white/20 shadow-xl">
-                            <span className="block text-[10px] font-black uppercase tracking-widest text-white/80 mb-0.5">{new Date(post.eventDetails.date).toLocaleString('default', { month: 'short' })}</span>
-                            <span className="block text-2xl font-black text-white leading-none">{new Date(post.eventDetails.date).getDate()}</span>
+                    <div className="flex gap-5">
+                        <div className="flex-shrink-0 w-16 h-16 bg-background rounded-2xl flex flex-col items-center justify-center border border-border/60 shadow-inner">
+                            <span className="text-[10px] font-black uppercase tracking-widest text-primary">{new Date(post.eventDetails.date).toLocaleString('default', { month: 'short' })}</span>
+                            <span className="text-2xl font-black text-foreground">{new Date(post.eventDetails.date).getDate()}</span>
                         </div>
-
-                        {/* Event Title & Info Overlay */}
-                        <div className="absolute bottom-0 left-0 right-0 p-6">
-                            <h3 className="text-2xl font-black text-white leading-tight tracking-tight mb-3 drop-shadow-lg line-clamp-2">{post.eventDetails.title}</h3>
-                            <div className="flex flex-wrap items-center gap-3">
-                                <div className="flex items-center gap-1.5 bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10 text-[10px] font-black uppercase tracking-widest text-white">
-                                    <ClockIcon className="w-3.5 h-3.5" /> {new Date(post.eventDetails.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                        <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between mb-1">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-[9px] font-black uppercase tracking-[0.2em] px-2 py-0.5 rounded-md bg-primary/10 text-primary border border-primary/20">Workshop</span>
                                 </div>
-                                <div className="flex items-center gap-1.5 bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10 text-[10px] font-black uppercase tracking-widest text-white max-w-[150px]">
-                                    <MapPinIcon className="w-3.5 h-3.5" /> <span className="truncate">{post.eventDetails.location}</span>
-                                </div>
+                                {countdown && (
+                                    <div className="flex items-center gap-1.5 px-3 py-1 bg-rose-500/10 text-rose-500 rounded-full border border-rose-500/20">
+                                        <ClockIcon className="w-3 h-3 animate-pulse" />
+                                        <span className="text-[9px] font-black uppercase tracking-widest">{countdown}</span>
+                                    </div>
+                                )}
                             </div>
+                            <h3 className="text-lg font-black text-foreground leading-tight tracking-tight mb-1 truncate">{post.eventDetails.title}</h3>
+                            <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider truncate">{post.eventDetails.location} • {new Date(post.eventDetails.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
                         </div>
-
-                        {countdown && (
-                            <div className="absolute top-4 right-4">
-                                <span className="text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full bg-amber-400 text-black shadow-lg animate-pulse">
-                                    {countdown}
-                                </span>
-                            </div>
-                        )}
                     </div>
+                    <button className="mt-5 w-full py-3 rounded-2xl bg-primary text-primary-foreground font-black text-xs uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all">
+                        Register for Event
+                    </button>
                 </div>
             )}
-            {postContent && <div className={`whitespace-pre-wrap leading-relaxed mb-6 font-medium ${strippedTextLength < 80 && !post.mediaUrls ? 'text-2xl md:text-3xl font-black text-foreground/90 tracking-tight' : 'text-base md:text-lg text-foreground/80'} ${!isExpanded ? 'line-clamp-5' : ''}`} dangerouslySetInnerHTML={{ __html: postContent }} />}
+            {postContent && <div className={`whitespace-pre-wrap leading-relaxed mb-6 font-medium ${strippedTextLength < 80 && !post.mediaUrls ? 'text-xl md:text-2xl font-black text-foreground/90 tracking-tight' : 'text-sm md:text-base text-foreground/80'} ${!isExpanded ? 'line-clamp-5' : ''}`} dangerouslySetInnerHTML={{ __html: postContent }} />}
             {isLongContent && <button onClick={() => setIsExpanded(!isExpanded)} className="text-primary hover:text-secondary font-black uppercase tracking-widest text-[10px] mb-6 inline-flex items-center gap-2 group/more">{isExpanded ? 'View Less' : 'Continue Reading'}<ArrowRightIcon className={`w-3 h-3 transition-transform ${isExpanded ? '-rotate-90' : 'group-hover:translate-x-1'}`}/></button>}
             {post.sharedPost && (
                 <div className="mb-6 border border-border/60 rounded-[2rem] p-6 bg-muted/20 relative group/shared overflow-hidden">

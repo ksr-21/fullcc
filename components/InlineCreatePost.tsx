@@ -52,16 +52,14 @@ const InlineCreatePost: React.FC<InlineCreatePostProps> = ({ user, onOpenCreateM
 
   return (
     <div 
-        className="bg-card/80 backdrop-blur-md rounded-[2.5rem] shadow-sm border border-border/40 p-4 mb-8 cursor-pointer hover:shadow-xl hover:bg-card hover:-translate-y-1 transition-all duration-300 group"
+        className="glassmorphism rounded-3xl shadow-sm p-4 mb-8 cursor-pointer hover:shadow-primary/5 hover:bg-card/80 transition-all duration-300 group"
         onClick={() => setIsExpanded(true)}
     >
         <div className="flex items-center gap-4">
-            <div className="p-0.5 rounded-full bg-gradient-to-tr from-primary/30 to-secondary/30">
-                <Avatar src={user.avatarUrl} name={user.name} size="md" className="border-2 border-card"/>
-            </div>
-            <div className="flex-1 bg-muted/40 group-hover:bg-muted/60 border border-transparent rounded-[2rem] px-6 py-4 text-muted-foreground/60 text-sm font-bold tracking-tight transition-all flex justify-between items-center shadow-inner">
-                <span>Start a conversation, {user.name.split(' ')[0]}...</span>
-                <div className="p-1.5 bg-primary text-white rounded-full shadow-lg shadow-primary/20 group-hover:scale-110 transition-transform">
+            <Avatar src={user.avatarUrl} name={user.name} size="md" className="rounded-full border border-white/10"/>
+            <div className="flex-1 bg-muted/20 group-hover:bg-muted/30 border border-white/5 rounded-2xl px-6 py-3 text-muted-foreground/60 text-sm font-bold tracking-tight transition-all flex justify-between items-center">
+                <span>What's on your mind, {user.name.split(' ')[0]}?</span>
+                <div className="p-1.5 bg-primary text-primary-foreground rounded-full shadow-lg shadow-primary/20 group-hover:scale-110 transition-transform">
                     <PlusIcon className="w-4 h-4 stroke-[3]"/>
                 </div>
             </div>
