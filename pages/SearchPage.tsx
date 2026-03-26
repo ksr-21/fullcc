@@ -5,7 +5,9 @@ import Header from '../components/Header';
 import BottomNavBar from '../components/BottomNavBar';
 import Feed from '../components/Feed';
 import Avatar from '../components/Avatar';
-import { SearchIcon, UsersIcon, ArrowRightIcon, CloseIcon } from '../components/Icons';
+import LeftSidebar from '../components/LeftSidebar';
+import RightSidebar from '../components/RightSidebar';
+import { SearchIcon, UsersIcon, ArrowRightIcon, CloseIcon, BookmarkIcon } from '../components/Icons';
 import { auth } from '../api';
 
 interface SearchPageProps {
@@ -38,93 +40,171 @@ const SearchPage: React.FC<SearchPageProps> = (props) => {
   const usersMap = useMemo(() => Object.fromEntries(users.map(u => [u.id, u])), [users]);
 
   const results = useMemo(() => {
-      if (!searchTerm.trim()) return { people: [], groups: [], posts: [] };
+      if (!searchTerm.trim()) return { people: [], groups: [], events: [] };
       const lower = searchTerm.toLowerCase();
       return {
           people: users.filter(u => u.name.toLowerCase().includes(lower) || u.department.toLowerCase().includes(lower)),
           groups: groups.filter(g => g.name.toLowerCase().includes(lower) || g.description.toLowerCase().includes(lower)),
-          posts: posts.filter(p => p.content?.toLowerCase().includes(lower))
+          events: posts.filter(p => p.isEvent && (p.eventDetails?.title.toLowerCase().includes(lower) || p.content?.toLowerCase().includes(lower)))
       };
   }, [users, groups, posts, searchTerm]);
 
-  const hasResults = results.people.length > 0 || results.groups.length > 0 || results.posts.length > 0;
+  const hasResults = results.people.length > 0 || results.groups.length > 0 || results.events.length > 0;
+
+  const usersArray = useMemo(() => Object.values(users), [users]);
+
+  // Discovery Data
+  const featuredEvent = useMemo(() => posts.find(p => p.isEvent && p.mediaUrls && p.mediaUrls.length > 0), [posts]);
+  const trendingPosts = useMemo(() => posts.slice(0, 4), [posts]);
+  const vibrantGroups = useMemo(() => groups.slice(0, 4), [groups]);
+  const eventRadar = useMemo(() => posts.filter(p => p.isEvent).slice(0, 4), [posts]);
 
   return (
-    <div className="bg-background min-h-screen flex flex-col">
+    <div className="bg-background min-h-screen flex flex-col relative">
+      {/* Ambient Background Elements */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
+          <div className="absolute -top-[10%] -left-[5%] w-[40%] h-[40%] rounded-full bg-primary/5 blur-[120px] animate-pulse"></div>
+          <div className="absolute top-[20%] -right-[10%] w-[35%] h-[35%] rounded-full bg-secondary/5 blur-[100px]"></div>
+      </div>
+
       <Header currentUser={currentUser} onLogout={handleLogout} onNavigate={onNavigate} currentPath={currentPath} />
       
-      <main className="flex-1 pb-24 lg:pb-8">
-        {/* Hero Header */}
-        <div className="relative bg-gradient-to-br from-sky-900 via-blue-900 to-slate-900 pt-12 pb-24 px-4 sm:px-6 overflow-hidden">
-            <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
-            <div className="relative max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
-                <div className="text-center md:text-left">
-                    <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight mb-2">Explore Campus</h1>
-                    <p className="text-sky-100 text-lg max-w-lg">Connect with people, discover communities, and find what's trending.</p>
+      <main className="flex-1 container mx-auto px-0 sm:px-4 lg:px-8 py-4 lg:py-8 pb-24 lg:pb-12 relative z-10">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            {/* Left Sidebar */}
+            <div className="hidden lg:block lg:col-span-3">
+                <div className="sticky top-24 space-y-6">
+                    <LeftSidebar currentUser={currentUser} onNavigate={onNavigate} currentPath={currentPath} />
                 </div>
             </div>
-        </div>
 
-        {/* Search Sticky Header */}
-        <div className="sticky top-16 z-30 -mt-8 px-4">
-            <div className="max-w-4xl mx-auto bg-card/95 backdrop-blur-md border border-border shadow-lg rounded-2xl p-3 flex flex-col gap-3">
-                <div className="relative">
-                    <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground pointer-events-none" />
-                    <input 
-                        type="text" 
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        placeholder="Search people, groups, posts..."
-                        className="w-full bg-muted/50 hover:bg-muted border border-transparent focus:border-primary rounded-xl pl-10 pr-10 py-3 text-base focus:outline-none transition-all text-foreground"
-                        autoFocus
-                    />
-                    {searchTerm && (
-                        <button onClick={() => setSearchTerm('')} className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 bg-muted hover:bg-muted-foreground/20 rounded-full text-muted-foreground transition-colors">
-                            <CloseIcon className="w-4 h-4" />
-                        </button>
-                    )}
-                </div>
-                
-                {searchTerm && (
-                    <div className="flex gap-2 px-1 pb-1 overflow-x-auto no-scrollbar">
-                        {['all', 'people', 'groups', 'posts'].map(tab => (
-                            <button
-                                key={tab}
-                                onClick={() => setActiveTab(tab as any)}
-                                className={`px-4 py-1.5 rounded-lg text-sm font-bold capitalize whitespace-nowrap transition-all duration-200 border ${
-                                    activeTab === tab 
-                                    ? 'bg-foreground text-background border-foreground shadow-sm' 
-                                    : 'bg-transparent text-muted-foreground border-transparent hover:bg-muted hover:text-foreground'
-                                }`}
-                            >
-                                {tab}
+            {/* Main Content */}
+            <div className="lg:col-span-6 space-y-8">
+                {/* Search Bar Area */}
+                <div className="px-4 sm:px-0">
+                    <div className="relative group">
+                        <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                        <input
+                            type="text"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            placeholder="Search campus, groups, events..."
+                            className="w-full bg-card border border-border/50 focus:border-primary rounded-2xl pl-12 pr-12 py-4 text-base focus:outline-none transition-all shadow-sm"
+                            autoFocus
+                        />
+                        {searchTerm && (
+                            <button onClick={() => setSearchTerm('')} className="absolute right-4 top-1/2 -translate-y-1/2 p-1.5 hover:bg-muted rounded-full text-muted-foreground transition-colors">
+                                <CloseIcon className="w-4 h-4" />
                             </button>
-                        ))}
+                        )}
                     </div>
-                )}
-            </div>
-        </div>
+                </div>
 
-        {/* Content Area */}
-        <div className="max-w-6xl mx-auto px-4 pt-8 space-y-10 min-h-[400px]">
-            
-            {!searchTerm && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-fade-in">
-                    {[
-                        { title: "Find People", subtitle: "Connect with classmates", icon: UsersIcon, color: "text-primary", bg: "bg-primary/10", border: "hover:border-primary/40" },
-                        { title: "Join Groups", subtitle: "Discover communities", icon: UsersIcon, color: "text-purple-500", bg: "bg-purple-500/10", border: "hover:border-purple-500/40" },
-                        { title: "Trending", subtitle: "See what's happening", icon: SearchIcon, color: "text-amber-500", bg: "bg-amber-500/10", border: "hover:border-amber-500/40" }
-                    ].map((item, i) => (
-                        <div key={i} className={`p-8 border border-dashed border-border bg-card/50 rounded-3xl text-center transition-all duration-300 ${item.border} hover:bg-card hover:shadow-lg cursor-pointer group`}>
-                            <div className={`w-16 h-16 mx-auto mb-4 ${item.bg} rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
-                                <item.icon className={`w-8 h-8 ${item.color}`}/>
-                            </div>
-                            <p className="text-lg font-bold text-foreground">{item.title}</p>
-                            <p className="text-sm text-muted-foreground mt-1">{item.subtitle}</p>
-                        </div>
+                {/* Tabs */}
+                <div className="px-4 sm:px-0 flex gap-3 overflow-x-auto no-scrollbar">
+                    {['all', 'people', 'groups', 'events'].map(tab => (
+                        <button
+                            key={tab}
+                            onClick={() => setActiveTab(tab as any)}
+                            className={`px-6 py-2.5 rounded-full text-sm font-black uppercase tracking-widest transition-all border ${
+                                activeTab === tab
+                                ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20'
+                                : 'bg-card text-muted-foreground border-border/50 hover:bg-muted'
+                            }`}
+                        >
+                            {tab}
+                        </button>
                     ))}
                 </div>
-            )}
+
+                {/* Discovery View (When no search term) */}
+                {!searchTerm && (
+                    <div className="space-y-12 animate-fade-in">
+                        {/* Featured Highlight */}
+                        {featuredEvent && (
+                            <div
+                                className="relative rounded-[2.5rem] overflow-hidden aspect-[16/9] group cursor-pointer shadow-2xl"
+                                onClick={() => onNavigate(`#/events/${featuredEvent.id}`)}
+                            >
+                                <img src={featuredEvent.mediaUrls?.[0]} alt="Featured" className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent"></div>
+                                <div className="absolute bottom-0 left-0 p-8 md:p-12 w-full">
+                                    <span className="bg-primary/90 backdrop-blur-md text-white text-[10px] font-black uppercase tracking-[0.2em] px-3 py-1 rounded-md mb-4 inline-block">Featured</span>
+                                    <h2 className="text-3xl md:text-4xl font-black text-white tracking-tight mb-2 line-clamp-2">{featuredEvent.eventDetails?.title}</h2>
+                                    <p className="text-white/70 text-sm md:text-base line-clamp-2 max-w-xl">{featuredEvent.eventDetails?.description || featuredEvent.content}</p>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Trending Now */}
+                        <section>
+                            <div className="flex items-center justify-between mb-6 px-1">
+                                <h3 className="text-xs font-black text-muted-foreground uppercase tracking-[0.3em]">Trending Now</h3>
+                                <ArrowRightIcon className="w-5 h-5 text-muted-foreground" />
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                {trendingPosts.map(post => (
+                                    <div key={post.id} className="bg-card/50 backdrop-blur-sm border border-border/50 rounded-3xl p-6 hover:bg-card hover:border-primary/30 transition-all cursor-pointer group">
+                                        <span className="text-[9px] font-black text-primary uppercase tracking-widest mb-2 block">#{post.isEvent ? 'Events' : 'CampusLife'}</span>
+                                        <h4 className="font-black text-foreground text-sm leading-tight mb-2 line-clamp-2 group-hover:text-primary transition-colors">{post.eventDetails?.title || post.content}</h4>
+                                        <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Trending in Campus</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </section>
+
+                        {/* Vibrant Communities */}
+                        <section>
+                            <div className="flex items-center justify-between mb-6 px-1">
+                                <h3 className="text-xs font-black text-muted-foreground uppercase tracking-[0.3em]">Vibrant Communities</h3>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                {vibrantGroups.map(group => (
+                                    <div key={group.id} className="bg-card border border-border/50 rounded-3xl p-6 flex items-center justify-between group hover:shadow-xl transition-all cursor-pointer" onClick={() => onNavigate(`#/groups/${group.id}`)}>
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center group-hover:scale-110 transition-transform">
+                                                <UsersIcon className="w-6 h-6 stroke-[2.5]" />
+                                            </div>
+                                            <div>
+                                                <h4 className="font-black text-foreground text-sm group-hover:text-primary transition-colors">{group.name}</h4>
+                                                <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">{group.memberIds.length} Members</p>
+                                            </div>
+                                        </div>
+                                        <button className="bg-muted hover:bg-primary hover:text-white text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-xl transition-all">Join</button>
+                                    </div>
+                                ))}
+                            </div>
+                        </section>
+
+                        {/* Event Radar */}
+                        <section>
+                            <div className="flex items-center justify-between mb-6 px-1">
+                                <h3 className="text-xs font-black text-muted-foreground uppercase tracking-[0.3em]">Event Radar</h3>
+                            </div>
+                            <div className="space-y-4">
+                                {eventRadar.map(event => {
+                                    const date = new Date(event.eventDetails?.date || Date.now());
+                                    return (
+                                        <div key={event.id} className="bg-card border border-border/50 rounded-3xl p-4 flex items-center gap-6 group hover:shadow-lg transition-all cursor-pointer" onClick={() => onNavigate(`#/events/${event.id}`)}>
+                                            <div className="flex-shrink-0 w-14 h-14 bg-background border border-border rounded-2xl flex flex-col items-center justify-center group-hover:bg-primary group-hover:border-primary transition-all">
+                                                <span className="text-[9px] font-black text-primary uppercase group-hover:text-white/80">{date.toLocaleString('default', { month: 'short' })}</span>
+                                                <span className="text-xl font-black text-foreground group-hover:text-white leading-none">{date.getDate()}</span>
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <h4 className="font-black text-foreground text-base group-hover:text-primary transition-colors line-clamp-1">{event.eventDetails?.title}</h4>
+                                                <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mt-1">{event.eventDetails?.location} • {date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                                            </div>
+                                            <BookmarkIcon className="w-5 h-5 text-muted-foreground hover:text-primary transition-colors" />
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </section>
+                    </div>
+                )}
+
+                {/* Search Results Area */}
+                <div className="space-y-10 min-h-[400px]">
 
             {searchTerm && !hasResults && (
                 <div className="text-center py-16 animate-fade-in">
@@ -187,24 +267,36 @@ const SearchPage: React.FC<SearchPageProps> = (props) => {
                 </div>
             )}
 
-            {/* Posts Results */}
-            {(activeTab === 'all' || activeTab === 'posts') && results.posts.length > 0 && (
-                <div className="animate-fade-in">
-                    <h3 className="text-lg font-bold text-foreground mb-4 px-1 flex items-center gap-2">
-                        <span className="bg-amber-500/10 text-amber-600 px-2 py-1 rounded text-xs">Posts</span>
-                    </h3>
-                    <div className="max-w-2xl mx-auto">
-                        <Feed 
-                            posts={results.posts} 
-                            users={usersMap} 
-                            currentUser={currentUser}
-                            groups={groups}
-                            onNavigate={onNavigate}
-                            {...postCardProps} 
-                        />
-                    </div>
+            {/* Events Results */}
+            {(activeTab === 'all' || activeTab === 'events') && results.events.length > 0 && (
+                        <div className="animate-fade-in">
+                            <h3 className="text-lg font-bold text-foreground mb-4 px-1 flex items-center gap-2">
+                        <span className="bg-amber-500/10 text-amber-600 px-2 py-1 rounded text-xs">Events</span>
+                            </h3>
+                            <Feed
+                        posts={results.events}
+                                users={usersMap}
+                                currentUser={currentUser}
+                                groups={groups}
+                                onNavigate={onNavigate}
+                                {...postCardProps}
+                            />
+                        </div>
+                    )}
                 </div>
-            )}
+            </div>
+
+            {/* Right Sidebar */}
+            <div className="hidden lg:block lg:col-span-3">
+                <RightSidebar
+                    groups={groups}
+                    events={posts.filter(p => p.isEvent)}
+                    currentUser={currentUser}
+                    onNavigate={onNavigate}
+                    users={usersArray}
+                    notices={[]} // Pass notices if available
+                />
+            </div>
         </div>
       </main>
       <BottomNavBar currentUser={currentUser} onNavigate={onNavigate} currentPage={currentPath}/>
