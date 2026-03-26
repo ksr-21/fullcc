@@ -255,9 +255,11 @@ function App() {
           : (currentUser.department ? [currentUser.department] : []);
 
       deptList.forEach(dept => {
-          const years = classMap[dept] || {};
+          const years = classMap[dept];
+          if (!years || typeof years !== 'object') return;
           Object.entries(years).forEach(([yearStr, divs]) => {
               const year = parseInt(yearStr);
+              if (!Array.isArray(divs)) return;
               (divs as string[]).forEach(div => {
                   const participantIds = withAdmin(allUsersList
                       .filter(u => {
@@ -685,7 +687,7 @@ function App() {
       const course = courses.find(c => c.id === courseId);
       if (course) {
           const userList = Object.values(users) as User[];
-          const studentObjects = userList.filter((u) => { if (u.tag !== 'Student') return false; if (course.students?.includes(u.id)) return true; if (u.department === course.department && u.yearOfStudy === course.year) { if (!course.division || u.division === course.division) return true; } return false; }).sort((a, b) => (a.rollNo || '').localeCompare(b.rollNo || '', undefined, { numeric: true, sensitivity: 'base' })).map((u) => ({ id: u.id, name: u.name, avatarUrl: u.avatarUrl, rollNo: u.rollNo, email: u.email }));
+          const studentObjects = userList.filter((u) => { if (u.tag !== 'Student') return false; if (course.students?.includes(u.id)) return true; if (u.department === course.department && u.yearOfStudy === course.year) { if (!course.division || u.division === course.division) return true; } return false; }).sort((a, b) => (a.rollNo || '').localeCompare(b.rollNo || '', undefined, { numeric: true, sensitivity: 'base' })).map((u) => ({ id: u.id, name: u.name || 'Student', avatarUrl: u.avatarUrl, rollNo: u.rollNo, email: u.email }));
           if (tab === 'attendance' && assignmentId === 'monthly') {
               return (
                   <MonthlyAttendancePage

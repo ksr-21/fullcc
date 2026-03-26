@@ -5,7 +5,7 @@ import Avatar from './Avatar';
 import { 
     HomeIcon, UsersIcon, CalendarIcon, BriefcaseIcon, SearchIcon, MessageIcon, LogoutIcon, BookOpenIcon,
     HomeIconSolid, UsersIconSolid, CalendarIconSolid, BriefcaseIconSolid, SearchIconSolid, MessageIconSolid, ChevronDownIcon, BookOpenIconSolid, NotebookIcon,
-    SunIcon, MoonIcon, LayoutGridIcon
+    SunIcon, MoonIcon, LayoutGridIcon, MegaphoneIcon
 } from './Icons';
 
 interface HeaderProps {
