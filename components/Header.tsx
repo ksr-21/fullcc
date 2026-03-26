@@ -56,7 +56,7 @@ const Header: React.FC<HeaderProps> = ({ currentUser, onLogout, onNavigate, curr
                 <div className="flex justify-between items-center h-16">
                     {/* Logo */}
                     <div className="flex items-center space-x-4">
-                        <span className="font-bold text-xl bg-gradient-to-r from-primary to-blue-400 bg-clip-text text-transparent cursor-pointer" onClick={() => onNavigate('#/home')}>CampusConnect</span>
+                        <span className="font-bold text-xl bg-gradient-to-r from-primary to-cyan-400 bg-clip-text text-transparent cursor-pointer text-glow-primary" onClick={() => onNavigate('#/home')}>CampusConnect</span>
                     </div>
 
                     {/* Center: Desktop Navigation */}

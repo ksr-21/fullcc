@@ -135,7 +135,7 @@ const RightSidebar: React.FC<RightSidebarProps> = ({ groups, events, currentUser
                 {suggestedGroups.map(group => (
                     <div key={group.id} className="flex items-center justify-between group/club cursor-pointer" onClick={() => onNavigate(`#/groups/${group.id}`)}>
                         <div className="flex items-center gap-3 min-w-0">
-                            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center text-white shadow-lg group-hover/club:scale-110 transition-transform">
+                            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-primary to-teal-600 flex items-center justify-center text-white shadow-lg group-hover/club:scale-110 transition-transform">
                                 <UsersIcon className="w-5 h-5 stroke-[2.5]"/>
                             </div>
                             <div className="min-w-0">

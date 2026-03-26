@@ -248,7 +248,7 @@ const SignupPage: React.FC<SignupPageProps> = ({ onNavigate }) => {
     return (
         <div className="min-h-screen flex w-full bg-background font-sans">
              <div className="hidden lg:flex lg:w-1/2 relative bg-secondary overflow-hidden items-center justify-center">
-                <div className="absolute inset-0 bg-gradient-to-br from-indigo-900 via-purple-900 to-slate-900 opacity-95"></div>
+                <div className="absolute inset-0 bg-gradient-to-br from-cyan-900 via-teal-900 to-slate-950 opacity-95"></div>
                  <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
                     <div className="absolute top-[20%] left-[10%] w-[40%] h-[40%] rounded-full bg-white/5 blur-3xl animate-pulse"></div>
                     <div className="absolute bottom-[20%] right-[10%] w-[40%] h-[40%] rounded-full bg-white/5 blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
@@ -340,7 +340,7 @@ const SignupPage: React.FC<SignupPageProps> = ({ onNavigate }) => {
                             </div>
                         </div>
 
-                        <button type="submit" disabled={isLoading} className="group relative w-full flex justify-center py-3.5 px-4 border border-transparent text-sm font-bold rounded-xl text-primary-foreground bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all duration-200 transform hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed shadow-lg shadow-primary/30">
+                        <button type="submit" disabled={isLoading} className="group relative w-full flex justify-center py-3.5 px-4 border border-transparent text-sm font-bold rounded-xl text-primary-foreground bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all duration-200 transform hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed shadow-lg shadow-primary/30 glow-primary">
                             {isLoading ? (
                                 <span className="flex items-center gap-2"><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> Verifying & Creating...</span>
                             ) : (
