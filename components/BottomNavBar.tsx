@@ -5,7 +5,8 @@ import { auth } from '../api';
 import { 
     HomeIcon, UsersIcon, SearchIcon, UserIcon, CalendarIcon, BriefcaseIcon, 
     HomeIconSolid, UsersIconSolid, SearchIconSolid, UserIconSolid, CalendarIconSolid, BriefcaseIconSolid,
-    LogoutIcon, ChartPieIcon, UserIcon as ProfileIcon
+    LogoutIcon, ChartPieIcon, UserIcon as ProfileIcon,
+    BookOpenIcon, BookOpenIconSolid, MessageIcon, MessageIconSolid
 } from './Icons';
 
 interface BottomNavBarProps {
