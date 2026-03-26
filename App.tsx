@@ -721,26 +721,12 @@ function App() {
                   handleUpdateAnyUser(existingUser.id, { collegeId: collegeRef.id, tag: 'Director' });
               } else {
                   // Create invite via backend for proper MongoDB sync
-                  try {
-                      await api.post('/invites', { 
-                          name: 'Director', 
-                          email: cleanEmail,
-                          tag: 'Director', 
-                          collegeId: collegeRef.id
-                      });
-                  } catch (err) {
-                      console.error('Backend invite creation failed, falling back to Firebase:', err);
-                      // Fallback to Firebase if backend fails
-                      await handleCreate('invites', { 
-                          name: 'Director', 
-                          email: cleanEmail,         
-                          tag: 'Director', 
-                          collegeId: collegeRef.id,  
-                          isApproved: false, 
-                          isRegistered: false, 
-                          createdAt: Date.now() 
-                      });  
-                  }
+              await api.post('/invites', {
+                  name: 'Director',
+                  email: cleanEmail,
+                  tag: 'Director',
+                  collegeId: collegeRef.id
+              });
               }
           }} onNavigate={handleNavigate} currentUser={activeUser} currentPath={currentPath} onApproveDirector={async (uid, collegeName) => { const user = users[uid]; let collegeId = user.collegeId; if (!collegeId) { const collegeRef = await handleCreate('colleges', { name: collegeName, adminUids: [uid], status: 'active' }); collegeId = collegeRef.id; } else { await handleUpdate('colleges', collegeId, { adminUids: FieldValue.arrayUnion(uid), status: 'active' }); } handleUpdateAnyUser(uid, { isApproved: true, collegeId }); }} onChangeCollegeAdmin={handleChangeCollegeAdmin} onDeleteUser={(uid) => { const isInvite = invitedUsers[uid]; handleDelete(isInvite ? 'invites' : 'users', uid); }} onDeleteCollege={(cid) => handleDelete('colleges', cid)} />;
       case '#/academics':

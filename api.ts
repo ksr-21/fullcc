@@ -22,29 +22,49 @@ const getHeaders = () => {
 export const api = {
     get: async (endpoint: string) => {
         const response = await withFriendlyNetworkError(() => fetch(`${API_URL}${endpoint}`, { headers: getHeaders() }));
-        if (!response.ok) { const error = await response.json(); throw new Error(error.message || 'API request failed'); }
+        if (!response.ok) {
+            let errorMsg = 'API request failed';
+            try { const error = await response.json(); errorMsg = error.message || error.error || errorMsg; } catch (e) {}
+            throw new Error(errorMsg);
+        }
         return response.json();
     },
     post: async (endpoint: string, data: any) => {
         const response = await withFriendlyNetworkError(() => fetch(`${API_URL}${endpoint}`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(data) }));
-        if (!response.ok) { const error = await response.json(); throw new Error(error.message || 'API request failed'); }
+        if (!response.ok) {
+            let errorMsg = 'API request failed';
+            try { const error = await response.json(); errorMsg = error.message || error.error || errorMsg; } catch (e) {}
+            throw new Error(errorMsg);
+        }
         return response.json();
     },
     put: async (endpoint: string, data: any) => {
         const response = await withFriendlyNetworkError(() => fetch(`${API_URL}${endpoint}`, { method: 'PUT', headers: getHeaders(), body: JSON.stringify(data) }));
-        if (!response.ok) { const error = await response.json(); throw new Error(error.message || 'API request failed'); }
+        if (!response.ok) {
+            let errorMsg = 'API request failed';
+            try { const error = await response.json(); errorMsg = error.message || error.error || errorMsg; } catch (e) {}
+            throw new Error(errorMsg);
+        }
         return response.json();
     },
     delete: async (endpoint: string) => {
         const response = await withFriendlyNetworkError(() => fetch(`${API_URL}${endpoint}`, { method: 'DELETE', headers: getHeaders() }));
-        if (!response.ok) { const error = await response.json(); throw new Error(error.message || 'API request failed'); }
+        if (!response.ok) {
+            let errorMsg = 'API request failed';
+            try { const error = await response.json(); errorMsg = error.message || error.error || errorMsg; } catch (e) {}
+            throw new Error(errorMsg);
+        }
         return response.json();
     },
     upload: async (file: File) => {
         const formData = new FormData(); formData.append('file', file);
         const token = localStorage.getItem('token');
         const response = await withFriendlyNetworkError(() => fetch(`${API_URL}/upload`, { method: 'POST', headers: { 'Authorization': token ? `Bearer ${token}` : '' }, body: formData }));
-        if (!response.ok) { const error = await response.json(); throw new Error(error.message || 'Upload failed'); }
+        if (!response.ok) {
+            let errorMsg = 'Upload failed';
+            try { const error = await response.json(); errorMsg = error.message || error.error || errorMsg; } catch (e) {}
+            throw new Error(errorMsg);
+        }
         return response.json();
     }
 };
