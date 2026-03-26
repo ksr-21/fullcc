@@ -28,44 +28,40 @@ const NavLink: React.FC<{
 const LeftSidebar: React.FC<LeftSidebarProps> = ({ currentUser, onNavigate }) => {
   return (
     <div className="space-y-8">
-        {/* Profile Card - Premium Redesign */}
-        <div className="bg-card rounded-[2.5rem] shadow-xl border border-border/40 overflow-hidden group hover:shadow-2xl transition-all duration-500">
-            <div className="h-28 bg-gradient-to-br from-primary via-teal-600 to-secondary relative">
-                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-30 mix-blend-overlay"></div>
-                <div className="absolute -bottom-1 left-0 w-full h-12 bg-gradient-to-t from-card to-transparent"></div>
+        {/* Profile Card - Target Style */}
+        <div className="bg-card/40 backdrop-blur-xl rounded-3xl shadow-sm border border-white/5 overflow-hidden group hover:shadow-primary/5 transition-all duration-500">
+            <div className="h-20 bg-gradient-to-br from-primary/20 to-cyan-400/20 relative">
+                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 mix-blend-overlay"></div>
             </div>
-            <div className="px-6 pb-8 relative">
-                <div className="flex justify-center -mt-12 mb-4 relative">
-                    <div className="p-1 bg-card rounded-[2rem] shadow-xl transition-transform duration-500 group-hover:rotate-3 group-hover:scale-105">
+            <div className="px-6 pb-6 relative">
+                <div className="flex justify-center -mt-10 mb-4 relative">
+                    <div className="p-1 bg-background rounded-full transition-transform duration-500 group-hover:scale-105 border border-white/10 shadow-xl">
                         <Avatar 
                             src={currentUser.avatarUrl} 
                             name={currentUser.name} 
                             size="xl" 
-                            className="w-24 h-24 rounded-[1.75rem] border-4 border-card bg-card object-cover cursor-pointer"
+                            className="w-20 h-20 rounded-full object-cover cursor-pointer"
                             onClick={() => onNavigate(`#/profile/${currentUser.id}`)}
                         />
-                        <div className="absolute -bottom-1 -right-1 bg-emerald-500 text-white rounded-lg p-1.5 border-4 border-card shadow-lg">
-                            <CheckCircleIcon className="w-3.5 h-3.5 stroke-[3]" />
-                        </div>
                     </div>
                 </div>
                 <div className="text-center">
                     <h2 
-                        className="font-black text-xl text-foreground cursor-pointer hover:text-primary transition-colors tracking-tight"
+                        className="font-black text-lg text-foreground cursor-pointer hover:text-primary transition-colors tracking-tight"
                         onClick={() => onNavigate(`#/profile/${currentUser.id}`)}
                     >
                         {currentUser.name}
                     </h2>
-                    <p className="text-[10px] text-muted-foreground mt-2 font-black uppercase tracking-[0.2em] leading-relaxed">
+                    <p className="text-[10px] text-muted-foreground mt-1 font-black uppercase tracking-[0.2em]">
                         {currentUser.department}<br/>
                         <span className="text-primary/70">{currentUser.tag === 'Student' ? `Year ${currentUser.yearOfStudy || 1}` : currentUser.tag}</span>
                     </p>
                     
                     <button 
                         onClick={() => onNavigate(`#/profile/${currentUser.id}`)} 
-                        className="mt-6 w-full py-3 rounded-2xl bg-muted/50 hover:bg-primary hover:text-white border border-border/50 text-[10px] font-black uppercase tracking-widest transition-all shadow-sm hover:shadow-md active:scale-95 flex items-center justify-center gap-2"
+                        className="mt-6 w-full py-3 rounded-2xl bg-muted/20 hover:bg-primary hover:text-white border border-white/5 text-[10px] font-black uppercase tracking-widest transition-all active:scale-95"
                     >
-                        <EditIcon className="w-3.5 h-3.5 stroke-[2.5]" /> Manage Profile
+                        Manage Profile
                     </button>
                 </div>
             </div>

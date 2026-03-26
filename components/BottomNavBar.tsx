@@ -111,7 +111,7 @@ const BottomNavBar: React.FC<BottomNavBarProps> = ({ currentUser, onNavigate, cu
             </div>
         )}
 
-        <nav className="fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-lg border-t border-border z-50 lg:hidden pb-safe select-none">
+        <nav className="fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-xl border-t border-white/5 z-50 lg:hidden pb-safe select-none">
         {/* CSS Grid for static, non-scrollable layout with 6 columns */}
         <div className="grid grid-cols-6 h-16 w-full px-1">
             {navItems.map(({ path, icon: Icon, activeIcon: ActiveIcon, label }) => {
@@ -134,15 +134,15 @@ const BottomNavBar: React.FC<BottomNavBarProps> = ({ currentUser, onNavigate, cu
                         onTouchStart={handleProfilePressStart}
                         onTouchEnd={handleProfilePressEnd}
                         onContextMenu={(e) => e.preventDefault()} // Prevent native context menu
-                        className={`flex flex-col items-center justify-center h-full transition-colors duration-200 group focus:outline-none ${
-                            isActive ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
+                        className={`flex flex-col items-center justify-center h-full transition-all duration-300 group focus:outline-none ${
+                            isActive ? 'text-primary' : 'text-muted-foreground/60 hover:text-foreground'
                         }`}
                         aria-label={label}
                     >
-                        <div className={`p-1 rounded-xl transition-all duration-300 ${isActive ? 'transform scale-110' : ''}`}>
+                        <div className={`p-1 rounded-xl transition-all duration-300 ${isActive ? 'transform scale-110 text-glow-primary' : ''}`}>
                             <IconComponent className="w-6 h-6" />
                         </div>
-                        <span className="text-[9px] font-bold mt-0.5 opacity-90 truncate max-w-[60px]">{label}</span>
+                        <span className={`text-[9px] font-black mt-0.5 uppercase tracking-widest truncate max-w-[60px] transition-all ${isActive ? 'opacity-100' : 'opacity-40'}`}>{label}</span>
                     </button>
                 );
             }
@@ -151,15 +151,15 @@ const BottomNavBar: React.FC<BottomNavBarProps> = ({ currentUser, onNavigate, cu
                 <button
                 key={path}
                 onClick={() => onNavigate(path)}
-                className={`flex flex-col items-center justify-center h-full transition-colors duration-200 group focus:outline-none ${
-                    isActive ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
+                className={`flex flex-col items-center justify-center h-full transition-all duration-300 group focus:outline-none ${
+                    isActive ? 'text-primary' : 'text-muted-foreground/60 hover:text-foreground'
                 }`}
                 aria-label={label}
                 >
-                <div className={`p-1 rounded-xl transition-all duration-300 ${isActive ? 'transform scale-110' : ''}`}>
+                <div className={`p-1 rounded-xl transition-all duration-300 ${isActive ? 'transform scale-110 text-glow-primary' : ''}`}>
                     <IconComponent className="w-6 h-6" />
                 </div>
-                <span className="text-[9px] font-bold mt-0.5 opacity-90 truncate max-w-[60px]">{label}</span>
+                <span className={`text-[9px] font-black mt-0.5 uppercase tracking-widest truncate max-w-[60px] transition-all ${isActive ? 'opacity-100' : 'opacity-40'}`}>{label}</span>
                 </button>
             );
             })}

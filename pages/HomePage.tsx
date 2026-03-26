@@ -154,15 +154,6 @@ const HomePage: React.FC<HomePageProps> = (props) => {
                     <div className="lg:col-span-6 space-y-8">
                         {/* Mobile Welcome / Stories Section */}
                         <div className="space-y-6">
-                            <div className="px-4 sm:px-0 flex items-center justify-between">
-                                <div>
-                                    <h2 className="text-2xl font-black text-foreground tracking-tight flex items-center gap-2">
-                                        Good Day, {safeFirstName} <SparkleIcon className="w-5 h-5 text-amber-400 fill-current animate-pulse"/>
-                                    </h2>
-                                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1">What's happening in your campus?</p>
-                                </div>
-                            </div>
-
                             <StoriesReel 
                                 stories={stories}
                                 users={users}

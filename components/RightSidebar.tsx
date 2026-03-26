@@ -15,10 +15,10 @@ interface RightSidebarProps {
 }
 
 const SidebarCard = ({ title, icon: Icon, children, onSeeMore }: any) => (
-    <div className="bg-card rounded-[2rem] p-6 shadow-sm border border-border/40 overflow-hidden relative group transition-all duration-500 hover:shadow-xl">
+    <div className="bg-card/40 backdrop-blur-xl rounded-3xl p-6 shadow-sm border border-white/5 overflow-hidden relative group transition-all duration-500 hover:shadow-primary/5">
         <div className="flex items-center justify-between mb-6 relative z-10 px-1">
-            <h3 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.25em] flex items-center gap-2">
-                <Icon className="w-4 h-4 text-primary/60"/> {title}
+            <h3 className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-[0.3em] flex items-center gap-2">
+                {title}
             </h3>
             {onSeeMore && (
                 <button onClick={onSeeMore} className="text-[9px] font-black text-primary hover:underline uppercase tracking-widest transition-all">
@@ -29,7 +29,6 @@ const SidebarCard = ({ title, icon: Icon, children, onSeeMore }: any) => (
         <div className="space-y-4 relative z-10">
             {children}
         </div>
-        <div className="absolute -top-10 -right-10 w-32 h-32 bg-primary/5 rounded-full blur-2xl group-hover:bg-primary/10 transition-all"></div>
     </div>
 );
 

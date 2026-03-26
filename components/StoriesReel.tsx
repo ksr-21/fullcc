@@ -25,10 +25,10 @@ type StoryEntity = {
 const AddStoryCircle: React.FC<{ user: User; onClick: () => void; }> = ({ user, onClick }) => (
     <div className="flex flex-col items-center gap-2 cursor-pointer group w-20 flex-shrink-0" onClick={onClick}>
         <div className="relative w-16 h-16 transition-all duration-500 group-hover:scale-105 active:scale-95">
-            <div className="absolute inset-0 rounded-[22px] bg-muted/50 border-2 border-border p-[3px]">
-                 <Avatar src={user.avatarUrl} name={user.name} size="lg" className="w-full h-full rounded-[18px] object-cover opacity-80 group-hover:opacity-100 transition-opacity"/>
+            <div className="absolute inset-0 rounded-full bg-muted/30 border-2 border-dashed border-border p-[3px]">
+                 <Avatar src={user.avatarUrl} name={user.name} size="lg" className="w-full h-full rounded-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"/>
             </div>
-            <div className="absolute -bottom-1 -right-1 bg-primary text-white rounded-xl p-1.5 border-4 border-card shadow-lg group-hover:bg-primary/90 group-hover:translate-x-1 group-hover:translate-y-1 transition-all">
+            <div className="absolute bottom-0 right-0 bg-primary text-white rounded-full p-1.5 border-2 border-card shadow-lg group-hover:bg-primary/90 transition-all">
                 <PlusIcon className="w-3.5 h-3.5 stroke-[3]" />
             </div>
         </div>
@@ -38,17 +38,17 @@ const AddStoryCircle: React.FC<{ user: User; onClick: () => void; }> = ({ user, 
 
 const StoryCircle: React.FC<{ entity: StoryEntity; onClick: () => void }> = ({ entity, onClick }) => {
     const ringClass = entity.hasUnviewed 
-        ? 'bg-gradient-to-tr from-primary via-purple-500 to-secondary p-[3px]' 
-        : 'bg-border/60 p-[1.5px]';
+        ? 'bg-gradient-to-tr from-primary to-cyan-400 p-[2.5px]'
+        : 'bg-border/40 p-[1.5px]';
 
     return (
         <div className="flex flex-col items-center gap-2 cursor-pointer group w-20 flex-shrink-0" onClick={onClick}>
-            <div className={`rounded-[22px] ${ringClass} transition-all duration-500 group-hover:scale-105 active:scale-95 shadow-sm group-hover:shadow-xl`}>
-                <div className="bg-card rounded-[19px] p-[2px]">
+            <div className={`rounded-full ${ringClass} transition-all duration-500 group-hover:scale-105 active:scale-95 shadow-sm group-hover:shadow-primary/20`}>
+                <div className="bg-background rounded-full p-[2px]">
                     {entity.type === 'user' ? (
-                         <Avatar src={entity.avatarUrl} name={entity.name} size="lg" className="w-14 h-14 rounded-[17px] object-cover"/>
+                         <Avatar src={entity.avatarUrl} name={entity.name} size="lg" className="w-14 h-14 rounded-full object-cover"/>
                     ) : (
-                        <div className="w-14 h-14 rounded-[17px] bg-primary/10 text-primary flex items-center justify-center">
+                        <div className="w-14 h-14 rounded-full bg-primary/10 text-primary flex items-center justify-center">
                             <UsersIcon className="w-6 h-6 stroke-[2.5]" />
                         </div>
                     )}
@@ -116,10 +116,9 @@ const StoriesReel: React.FC<StoriesReelProps> = ({ stories, users, groups, curre
     const canCreateStory = !(currentUser.tag === 'Teacher' && currentUser.isApproved === false);
     
     return (
-        <div className="relative p-[1px] rounded-[32px] bg-gradient-to-r from-border/50 to-border/20 shadow-sm border border-white/40 overflow-hidden">
-            <div className="absolute inset-0 bg-white/40 dark:bg-black/20 backdrop-blur-3xl z-0"></div>
-            <div className="relative z-10 px-4 py-6">
-                <div className="flex items-center space-x-2 overflow-x-auto no-scrollbar pb-1">
+        <div className="relative overflow-hidden">
+            <div className="relative z-10 py-4 px-1">
+                <div className="flex items-center space-x-4 overflow-x-auto no-scrollbar pb-1">
                     {canCreateStory && <AddStoryCircle user={currentUser} onClick={onAddStoryClick} />}
                     {storyEntities.map(entity => (
                         <StoryCircle 
