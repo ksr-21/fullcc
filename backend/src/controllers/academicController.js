@@ -31,14 +31,26 @@ const takeAttendance = async (req, res) => {
         const { date, label, records } = req.body;
         const course = await Course.findById(req.params.id);
         if (course) {
-            // Find record by comparing timestamps accurately
-            const timestamp = new Date(date).getTime();
-            const idx = course.attendanceRecords.findIndex(r => new Date(r.date).getTime() === timestamp);
+            // Check permissions: faculty must be assigned to this course or be HOD/Director of dept
+            const isAssigned = course.facultyIds?.some(id => id.toString() === req.user.userId) ||
+                              course.facultyId?.toString() === req.user.userId;
+            const isDeptAdmin = (req.user.role === 'HOD/Dean' || req.user.role === 'Director') &&
+                               req.user.collegeId?.toString() === course.collegeId?.toString();
+
+            if (!isAssigned && !isDeptAdmin) {
+                return res.status(403).json({ message: 'Not authorized to mark attendance for this course' });
+            }
+
+            // Use normalized date for comparison
+            const targetDate = new Date(date);
+            const idx = course.attendanceRecords.findIndex(r =>
+                new Date(r.date).getTime() === targetDate.getTime()
+            );
 
             if (idx !== -1) {
-                course.attendanceRecords[idx] = { date: timestamp, label, records };
+                course.attendanceRecords[idx] = { date: targetDate, label, records };
             } else {
-                course.attendanceRecords.push({ date: timestamp, label, records });
+                course.attendanceRecords.push({ date: targetDate, label, records });
             }
 
             course.markModified('attendanceRecords');
