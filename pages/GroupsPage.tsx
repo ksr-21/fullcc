@@ -5,6 +5,8 @@ import Header from '../components/Header';
 import GroupCard from '../components/GroupCard';
 import CreateGroupModal from '../components/CreateGroupModal';
 import BottomNavBar from '../components/BottomNavBar';
+import LeftSidebar from '../components/LeftSidebar';
+import RightSidebar from '../components/RightSidebar';
 import { auth } from '../api';
 import { GhostIcon, ArrowRightIcon, PlusCircleIcon, UsersIcon } from '../components/Icons';
 
@@ -34,31 +36,40 @@ const GroupsPage: React.FC<GroupsPageProps> = ({ currentUser, groups, onNavigate
   }, [groups, currentUser]);
 
 
+  const usersArray = useMemo(() => [], []); // Should ideally pass all users if available
+
   return (
-    <div className="bg-background min-h-screen flex flex-col">
+    <div className="bg-background min-h-screen flex flex-col relative">
+      {/* Ambient Background Elements */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
+          <div className="absolute -top-[10%] -left-[5%] w-[40%] h-[40%] rounded-full bg-primary/5 blur-[120px] animate-pulse"></div>
+          <div className="absolute top-[20%] -right-[10%] w-[35%] h-[35%] rounded-full bg-secondary/5 blur-[100px]"></div>
+      </div>
+
       <Header currentUser={currentUser} onLogout={handleLogout} onNavigate={onNavigate} currentPath={currentPath} />
       
-      <main className="flex-1 pb-24 lg:pb-8">
-        {/* Hero Header */}
-        <div className="relative bg-gradient-to-br from-teal-900 via-emerald-900 to-slate-900 pt-12 pb-24 px-4 sm:px-6 overflow-hidden">
-            <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
-            <div className="relative max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
-                <div className="text-center md:text-left">
-                    <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight mb-2">Student Communities</h1>
-                    <p className="text-emerald-100 text-lg max-w-lg">Find your squad, join clubs, and lead the way.</p>
+      <main className="flex-1 container mx-auto px-0 sm:px-4 lg:px-8 py-4 lg:py-8 pb-24 lg:pb-12 relative z-10">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            {/* Left Sidebar */}
+            <div className="hidden lg:block lg:col-span-3">
+                <div className="sticky top-24 space-y-6">
+                    <LeftSidebar currentUser={currentUser} onNavigate={onNavigate} currentPath={currentPath} />
                 </div>
-                
-                <button 
-                    onClick={() => setIsCreateModalOpen(true)} 
-                    className="bg-white text-emerald-900 font-bold py-3 px-6 rounded-xl shadow-xl hover:bg-emerald-50 transition-transform transform hover:scale-105 flex items-center gap-2"
-                >
-                    <PlusCircleIcon className="w-5 h-5"/> Create Group
-                </button>
             </div>
-        </div>
 
-        {/* Content Container - Overlap Header */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-12 relative z-10 space-y-12 pb-10">
+            {/* Main Content */}
+            <div className="lg:col-span-6 space-y-8">
+                {/* Content Area */}
+                <div className="space-y-12 pb-10">
+                    <div className="flex justify-between items-center mb-4">
+                        <h1 className="text-2xl font-bold text-foreground">Groups</h1>
+                        <button
+                            onClick={() => setIsCreateModalOpen(true)}
+                            className="bg-primary text-primary-foreground font-bold text-xs uppercase tracking-widest py-2 px-4 rounded-xl shadow-lg hover:opacity-90 transition-all flex items-center gap-2"
+                        >
+                            <PlusCircleIcon className="w-4 h-4"/> Create Group
+                        </button>
+                    </div>
             
             {/* Confessions Link Card */}
             <div className="animate-fade-in">
@@ -104,40 +115,54 @@ const GroupsPage: React.FC<GroupsPageProps> = ({ currentUser, groups, onNavigate
                 </div>
             )}
 
-            {/* Discover Groups Section */}
-            <div>
-                <div className="flex items-center gap-3 mb-6 px-1">
-                    <div className="h-8 w-1.5 bg-secondary rounded-full"></div>
-                    <h2 className="text-2xl font-bold text-foreground">Discover Groups</h2>
-                </div>
-                {discoverGroups.length > 0 ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                        {discoverGroups.map(group => (
-                            <GroupCard 
-                                key={group.id} 
-                                group={group} 
-                                currentUser={currentUser}
-                                onNavigate={onNavigate} 
-                                onJoinGroupRequest={onJoinGroupRequest}
-                                onToggleFollowGroup={onToggleFollowGroup}
-                            />
-                        ))}
-                    </div>
-                ) : (
-                    <div className="text-center bg-card rounded-3xl border border-border border-dashed p-16">
-                        <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4 text-muted-foreground">
-                            <UsersIcon className="w-8 h-8" />
+                    {/* Discover Groups Section */}
+                    <div>
+                        <div className="flex items-center gap-3 mb-6 px-1">
+                            <div className="h-8 w-1.5 bg-secondary rounded-full"></div>
+                            <h2 className="text-2xl font-bold text-foreground">Discover Groups</h2>
                         </div>
-                        <h3 className="text-xl font-bold text-foreground">All groups have been discovered!</h3>
-                        <p className="mt-2 text-muted-foreground max-w-md mx-auto">You've seen it all. Why not create a new group and start building your own community?</p>
-                        <button 
-                            onClick={() => setIsCreateModalOpen(true)}
-                            className="mt-6 text-primary font-bold hover:underline"
-                        >
-                            Create a Group
-                        </button>
+                        {discoverGroups.length > 0 ? (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                {discoverGroups.map(group => (
+                                    <GroupCard
+                                        key={group.id}
+                                        group={group}
+                                        currentUser={currentUser}
+                                        onNavigate={onNavigate}
+                                        onJoinGroupRequest={onJoinGroupRequest}
+                                        onToggleFollowGroup={onToggleFollowGroup}
+                                    />
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="text-center bg-card rounded-3xl border border-border border-dashed p-16">
+                                <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4 text-muted-foreground">
+                                    <UsersIcon className="w-8 h-8" />
+                                </div>
+                                <h3 className="text-xl font-bold text-foreground">All groups have been discovered!</h3>
+                                <p className="mt-2 text-muted-foreground max-w-md mx-auto">You've seen it all. Why not create a new group and start building your own community?</p>
+                                <button
+                                    onClick={() => setIsCreateModalOpen(true)}
+                                    className="mt-6 text-primary font-bold hover:underline"
+                                >
+                                    Create a Group
+                                </button>
+                            </div>
+                        )}
                     </div>
-                )}
+                </div>
+            </div>
+
+            {/* Right Sidebar */}
+            <div className="hidden lg:block lg:col-span-3">
+                <RightSidebar
+                    groups={groups}
+                    events={[]} // Pass events if available
+                    currentUser={currentUser}
+                    onNavigate={onNavigate}
+                    users={[]} // Pass users if available
+                    notices={[]} // Pass notices if available
+                />
             </div>
         </div>
       </main>

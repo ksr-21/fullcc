@@ -60,36 +60,38 @@ const Header: React.FC<HeaderProps> = ({ currentUser, onLogout, onNavigate, curr
                         <span className="font-bold text-xl bg-gradient-to-r from-primary to-cyan-400 bg-clip-text text-transparent cursor-pointer text-glow-primary" onClick={() => onNavigate('#/home')}>CampusConnect</span>
                     </div>
 
-                    {/* Center: Desktop Navigation */}
-                    <nav className="hidden lg:flex items-center lg:space-x-1 h-full">
-                       {navItems.map(({ path, icon: Icon, activeIcon: ActiveIcon, label }) => {
-                           const isActive = currentPath.startsWith(path);
-                           const IconComponent = isActive ? ActiveIcon : Icon;
-                           const unreadCount = label === 'Notices' ? (window as any).unreadNoticesCount || 0 : 0;
-                           return (
-                                <button
-                                    key={path}
-                                    onClick={() => onNavigate(path)}
-                                    className={`flex items-center justify-center h-full px-1 transition-colors duration-200 relative ${
-                                        isActive ? 'text-primary' : 'text-muted-foreground hover:text-primary'
-                                    }`}
-                                    aria-label={label}
-                                    title={label}
-                                >
-                                    <div className={`flex flex-col items-center justify-center p-2 rounded-lg w-20 transition-colors ${isActive ? 'bg-primary/10' : 'hover:bg-muted/50'}`}>
-                                      <div className="relative">
-                                        <IconComponent className="w-6 h-6 mb-1" />
-                                        {unreadCount > 0 && <span className="absolute -top-1 -right-1 bg-primary text-white text-[10px] font-black w-4 h-4 flex items-center justify-center rounded-full animate-bounce">{unreadCount}</span>}
-                                      </div>
-                                      <span className="text-xs font-medium">{label}</span>
-                                    </div>
-                                </button>
-                           )
-                       })}
-                    </nav>
+                    {/* Center: Search Bar (Desktop) */}
+                    <div className="hidden lg:flex flex-1 max-w-xl mx-8">
+                        <div className="relative w-full group">
+                            <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                            <input
+                                type="text"
+                                placeholder="Search for courses, or events..."
+                                onClick={() => onNavigate('#/search')}
+                                className="w-full bg-muted/50 hover:bg-muted border border-border/50 focus:border-primary/50 rounded-2xl pl-11 pr-4 py-2.5 text-sm focus:outline-none transition-all cursor-pointer"
+                                readOnly
+                            />
+                        </div>
+                    </div>
 
                     {/* Right Side Actions */}
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-3">
+                        {/* Desktop Notification Icon */}
+                        <div className="hidden lg:block relative">
+                            <button
+                                onClick={() => onNavigate('#/notifications')}
+                                className="p-2.5 text-foreground hover:text-primary hover:bg-primary/5 rounded-xl transition-all relative"
+                                aria-label="Notices"
+                            >
+                                <MegaphoneIcon className="w-5 h-5" />
+                                {((window as any).unreadNoticesCount || 0) > 0 && (
+                                    <span className="absolute top-2 right-2 bg-primary text-white text-[8px] font-black w-3.5 h-3.5 flex items-center justify-center rounded-full shadow-lg shadow-primary/20">
+                                        {(window as any).unreadNoticesCount}
+                                    </span>
+                                )}
+                            </button>
+                        </div>
+
                         {/* Mobile Icons */}
                         <div className="flex items-center lg:hidden">
                             <button onClick={() => onNavigate('#/search')} className="p-2 text-foreground hover:text-primary rounded-full" aria-label="Search">

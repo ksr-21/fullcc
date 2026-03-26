@@ -117,7 +117,11 @@ const StoriesReel: React.FC<StoriesReelProps> = ({ stories, users, groups, curre
     
     return (
         <div className="relative overflow-hidden">
-            <div className="relative z-10 py-4 px-1">
+            <div className="flex items-center gap-3 mb-4 px-1">
+                <div className="h-6 w-1 bg-primary rounded-full"></div>
+                <h3 className="text-sm font-black text-foreground uppercase tracking-[0.2em]">Pulse</h3>
+            </div>
+            <div className="relative z-10 pb-4 px-1">
                 <div className="flex items-center space-x-4 overflow-x-auto no-scrollbar pb-1">
                     {canCreateStory && <AddStoryCircle user={currentUser} onClick={onAddStoryClick} />}
                     {storyEntities.map(entity => (

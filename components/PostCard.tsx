@@ -66,7 +66,7 @@ const ImageGrid: React.FC<{ images: string[]; onImageClick: (index: number) => v
     if (count === 1) {
         return (
             <div className="relative cursor-pointer overflow-hidden rounded-[2.5rem] border border-border/40 bg-muted shadow-lg flex justify-center transform transition-transform duration-500 hover:scale-[1.01]" onClick={() => onImageClick(0)}>
-                <img src={images[0]} alt="Post media" className="w-full h-auto object-contain max-h-[700px]" />
+                <img src={images[0]} alt="Post media" className="w-full h-auto object-cover max-h-[400px]" />
             </div>
         );
     }

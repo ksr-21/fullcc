@@ -2,30 +2,63 @@
 import React from 'react';
 import type { User } from '../types';
 import Avatar from './Avatar';
-import { UserIcon, UsersIcon, CalendarIcon, BriefcaseIcon, BookmarkIcon, SettingsIcon, EditIcon, CheckCircleIcon } from './Icons';
+import {
+    UserIcon, UsersIcon, CalendarIcon, BriefcaseIcon, BookmarkIcon, SettingsIcon,
+    HomeIcon, BookOpenIcon, MegaphoneIcon, MessageIcon,
+    HomeIconSolid, UsersIconSolid, CalendarIconSolid, BriefcaseIconSolid,
+    BookOpenIconSolid, MessageIconSolid
+} from './Icons';
 
 interface LeftSidebarProps {
   currentUser: User;
   onNavigate: (path: string) => void;
+  currentPath?: string;
 }
 
 const NavLink: React.FC<{
     icon: React.ElementType;
+    activeIcon?: React.ElementType;
     label: string;
     path: string;
     onNavigate: (path: string) => void;
-}> = ({ icon: Icon, label, path, onNavigate }) => (
-    <a 
-        onClick={() => onNavigate(path)}
-        className="flex items-center space-x-4 px-5 py-3.5 rounded-2xl text-muted-foreground hover:bg-primary/5 hover:text-primary cursor-pointer transition-all group font-black text-xs uppercase tracking-[0.15em] border border-transparent hover:border-primary/10"
-    >
-        <Icon className="w-5 h-5 opacity-40 group-hover:opacity-100 transition-all transform group-hover:scale-110" />
-        <span className="transition-colors">{label}</span>
-    </a>
-);
+    isActive?: boolean;
+    badge?: number;
+}> = ({ icon: Icon, activeIcon: ActiveIcon, label, path, onNavigate, isActive, badge }) => {
+    const IconComponent = isActive && ActiveIcon ? ActiveIcon : Icon;
+
+    return (
+        <a
+            onClick={() => onNavigate(path)}
+            className={`flex items-center justify-between px-5 py-3.5 rounded-2xl cursor-pointer transition-all group border border-transparent ${
+                isActive
+                ? 'bg-primary/10 text-primary border-primary/10 shadow-sm'
+                : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+            }`}
+        >
+            <div className="flex items-center space-x-4">
+                <IconComponent className={`w-5 h-5 transition-all transform ${isActive ? 'scale-110' : 'opacity-50 group-hover:opacity-100 group-hover:scale-110'}`} />
+                <span className={`text-[11px] font-black uppercase tracking-[0.15em] transition-colors ${isActive ? 'font-black' : 'font-bold'}`}>{label}</span>
+            </div>
+            {badge !== undefined && badge > 0 && (
+                <span className="bg-primary text-white text-[9px] font-black px-2 py-0.5 rounded-full shadow-lg shadow-primary/20">
+                    {badge}
+                </span>
+            )}
+        </a>
+    );
+};
 
 
-const LeftSidebar: React.FC<LeftSidebarProps> = ({ currentUser, onNavigate }) => {
+const LeftSidebar: React.FC<LeftSidebarProps> = ({ currentUser, onNavigate, currentPath = '' }) => {
+    const navItems = [
+        { path: '#/home', icon: HomeIcon, activeIcon: HomeIconSolid, label: 'Home' },
+        { path: '#/academics', icon: BookOpenIcon, activeIcon: BookOpenIconSolid, label: 'Academics' },
+        { path: '#/groups', icon: UsersIcon, activeIcon: UsersIconSolid, label: 'Groups' },
+        { path: '#/events', icon: CalendarIcon, activeIcon: CalendarIconSolid, label: 'Events' },
+        { path: '#/opportunities', icon: BriefcaseIcon, activeIcon: BriefcaseIconSolid, label: 'Opportunities' },
+        { path: '#/notifications', icon: MegaphoneIcon, activeIcon: MegaphoneIcon, label: 'Notices', badge: (window as any).unreadNoticesCount },
+        { path: '#/chat', icon: MessageIcon, activeIcon: MessageIconSolid, label: 'Chat' },
+    ];
   return (
     <div className="space-y-8">
         {/* Profile Card - Target Style */}
@@ -67,17 +100,43 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({ currentUser, onNavigate }) =>
             </div>
         </div>
 
-        {/* Quick Links Menu - Minimal & Modern */}
+        {/* Quick Links Menu - Primary Navigation */}
         <div className="space-y-2">
-            <h3 className="px-5 text-[10px] font-black text-muted-foreground/60 uppercase tracking-[0.3em] mb-4">Explore Campus</h3>
+            <h3 className="px-5 text-[10px] font-black text-muted-foreground/60 uppercase tracking-[0.3em] mb-4">Navigation</h3>
             <nav className="space-y-1">
-                <NavLink icon={UserIcon} label="My Profile" path={`#/profile/${currentUser.id}`} onNavigate={onNavigate} />
-                <NavLink icon={UsersIcon} label="My Groups" path="#/groups" onNavigate={onNavigate} />
-                <NavLink icon={CalendarIcon} label="Events" path="#/events" onNavigate={onNavigate} />
-                <NavLink icon={BriefcaseIcon} label="Opportunities" path="#/opportunities" onNavigate={onNavigate} />
-                <NavLink icon={BookmarkIcon} label="Saved" path={`#/profile/${currentUser.id}`} onNavigate={onNavigate} />
-                <div className="h-px bg-gradient-to-r from-transparent via-border/50 to-transparent my-4 mx-5"></div>
-                <NavLink icon={SettingsIcon} label="Account Settings" path="#/settings" onNavigate={() => {}} />
+                {navItems.map(item => (
+                    <NavLink
+                        key={item.path}
+                        {...item}
+                        onNavigate={onNavigate}
+                        isActive={currentPath.startsWith(item.path)}
+                    />
+                ))}
+
+                <div className="h-px bg-gradient-to-r from-transparent via-border/50 to-transparent my-6 mx-5"></div>
+
+                <h3 className="px-5 text-[10px] font-black text-muted-foreground/60 uppercase tracking-[0.3em] mb-4">My Account</h3>
+                <NavLink
+                    icon={UserIcon}
+                    label="My Profile"
+                    path={`#/profile/${currentUser.id}`}
+                    onNavigate={onNavigate}
+                    isActive={currentPath === `#/profile/${currentUser.id}`}
+                />
+                <NavLink
+                    icon={BookmarkIcon}
+                    label="Saved Posts"
+                    path={`#/profile/${currentUser.id}`}
+                    onNavigate={onNavigate}
+                    isActive={false} // Assuming we can't easily check for saved tab yet
+                />
+                <NavLink
+                    icon={SettingsIcon}
+                    label="Settings"
+                    path="#/settings"
+                    onNavigate={() => {}}
+                    isActive={currentPath === '#/settings'}
+                />
             </nav>
         </div>
 

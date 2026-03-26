@@ -146,7 +146,7 @@ const HomePage: React.FC<HomePageProps> = (props) => {
                     {/* Left Sidebar */}
                     <div className="hidden lg:block lg:col-span-3">
                         <div className="sticky top-24 space-y-6">
-                            <LeftSidebar currentUser={currentUser} onNavigate={onNavigate} />
+                            <LeftSidebar currentUser={currentUser} onNavigate={onNavigate} currentPath={currentPath} />
                         </div>
                     </div>
 
