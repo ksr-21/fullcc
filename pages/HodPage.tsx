@@ -157,7 +157,7 @@ const CreateClassModal = ({ isOpen, onClose, onCreate, existingClasses, onDelete
                     <div className="space-y-3">
                         <div className="flex items-center gap-2 mb-2 text-muted-foreground border-t border-border/50 pt-4"><BookOpenIcon className="w-4 h-4"/><span className="text-[11px] font-black uppercase tracking-widest">Existing Classes</span></div>
                         {existingClasses && existingClasses.length > 0 ? (
-                            <div className="space-y-2">{existingClasses.sort((a: any, b: any) => a.year - b.year || a.division.localeCompare(b.division)).map((cls: any) => {
+                            <div className="space-y-2">{existingClasses.sort((a: any, b: any) => a.year - b.year || (a.division || '').localeCompare(b.division || '')).map((cls: any) => {
                                 const statKey = `${cls.year}-${cls.division}`;
                                 const stats = classStats?.[statKey] || { count: 0, avg: 0 };
                                 
@@ -523,7 +523,7 @@ const UserDirectory = ({
                 if ((a.division || '') !== (b.division || '')) return (a.division || '').localeCompare(b.division || '');
                 if (a.rollNo && b.rollNo) return a.rollNo.localeCompare(b.rollNo, undefined, {numeric: true});
             }
-            return a.name.localeCompare(b.name);
+            return (a.name || '').localeCompare(b.name || '');
         });
     }, [users, searchTerm, yearFilter, divFilter, type]);
 
@@ -1400,9 +1400,11 @@ const HodPage: React.FC<HodPageProps> = (props) => {
         let totalInstances = 0;
         deptCourses.forEach(course => {
             course.attendanceRecords?.forEach(record => {
-                const statuses = Object.values(record.records);
-                totalInstances += statuses.length;
-                totalPresent += statuses.filter(s => (s as any).status === 'present').length;
+                if (record && record.records) {
+                    const statuses = Object.values(record.records);
+                    totalInstances += statuses.length;
+                    totalPresent += statuses.filter(s => (s as any).status === 'present').length;
+                }
             });
         });
         return totalInstances > 0 ? Math.round((totalPresent / totalInstances) * 100) : 0;
@@ -1414,7 +1416,7 @@ const HodPage: React.FC<HodPageProps> = (props) => {
         deptCourses.forEach(course => {
             const classKey = `${course.year}-${course.division}`;
             const todayRecord = course.attendanceRecords?.find(r => new Date(r.date).toDateString() === todayStr);
-            if (todayRecord) {
+            if (todayRecord && todayRecord.records) {
                 const statuses = Object.values(todayRecord.records);
                 if (statuses.length > 0) {
                     const presentCount = statuses.filter((s: any) => s.status === 'present').length;
@@ -1443,9 +1445,11 @@ const HodPage: React.FC<HodPageProps> = (props) => {
             let p = 0, t = 0;
             courses.forEach(c => {
                 c.attendanceRecords?.forEach(r => {
-                    Object.values(r.records).forEach((s:any) => {
-                        t++; if(s.status === 'present') p++;
-                    });
+                    if (r && r.records) {
+                        Object.values(r.records).forEach((s:any) => {
+                            t++; if(s.status === 'present') p++;
+                        });
+                    }
                 });
             });
             const avg = t > 0 ? Math.round((p/t)*100) : 0;
@@ -1666,7 +1670,7 @@ const HodPage: React.FC<HodPageProps> = (props) => {
                             
                             <div className="flex flex-col gap-4">
                                 {activeClasses.length > 0 ? (
-                                    activeClasses.sort((a:any, b:any) => a.year - b.year || a.division.localeCompare(b.division)).map((cls: any) => {
+                                    activeClasses.sort((a:any, b:any) => a.year - b.year || (a.division || '').localeCompare(b.division || '')).map((cls: any) => {
                                         const classKey = `${cls.year}-${cls.division}`;
                                         const isExpanded = expandedClass === classKey;
                                         const stats = classStats?.[classKey] || { count: 0, avg: 0 };
@@ -1738,7 +1742,7 @@ const HodPage: React.FC<HodPageProps> = (props) => {
                                                                     
                                                                     let subTotal = 0, subPresent = 0;
                                                                     sub.attendanceRecords?.forEach((r: any) => {
-                                                                        if (r.records) {
+                                                                        if (r && r.records) {
                                                                             Object.values(r.records).forEach((s: any) => {
                                                                                 subTotal++;
                                                                                 if (s.status === 'present') subPresent++;

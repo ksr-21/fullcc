@@ -243,7 +243,7 @@ const CreateClassModal = ({ isOpen, onClose, onCreate, existingClasses, onDelete
                     <div className="space-y-3">
                         <div className="flex items-center gap-2 mb-2 text-muted-foreground border-t border-border/50 pt-4"><BookOpenIcon className="w-4 h-4"/><span className="text-[11px] font-black uppercase tracking-widest">Existing Classes</span></div>
                         {existingClasses && existingClasses.length > 0 ? (
-                            <div className="space-y-2">{existingClasses.sort((a: any, b: any) => a.year - b.year || a.division.localeCompare(b.division)).map((cls: any) => {
+                            <div className="space-y-2">{existingClasses.sort((a: any, b: any) => a.year - b.year || (a.division || '').localeCompare(b.division || '')).map((cls: any) => {
                                 const statKey = `${cls.year}-${cls.division}`;
                                 const stats = classStats?.[statKey] || { count: 0, avg: 0 };
                                 
@@ -442,15 +442,17 @@ const ReportsView: React.FC<{ courses?: Course[]; departments: string[] }> = ({ 
         departments.forEach(d => deptStats[d] = { present: 0, total: 0 });
 
         courses.forEach(course => {
+            if (!course) return;
             if (filterDept !== 'All' && course.department !== filterDept) return;
             if (filterYear !== 'All' && course.year.toString() !== filterYear) return;
             if (searchQuery && !course.subject.toLowerCase().includes(searchQuery.toLowerCase())) return;
 
-            if (!deptStats[course.department]) {
+            if (course.department && !deptStats[course.department]) {
                 deptStats[course.department] = { present: 0, total: 0 };
             }
 
             const matchingRecords = course.attendanceRecords?.filter(r => {
+                if (!r || !r.date) return false;
                 const rDate = new Date(r.date);
                 return rDate >= start && rDate <= end;
             }) || [];
@@ -458,7 +460,7 @@ const ReportsView: React.FC<{ courses?: Course[]; departments: string[] }> = ({ 
             if (matchingRecords.length > 0) {
                 let coursePresent = 0, courseTotal = 0;
                 matchingRecords.forEach(record => {
-                    if (record.records) {
+                    if (record && record.records) {
                         Object.values(record.records).forEach((status: any) => {
                             courseTotal++;
                             if (status.status === 'present') coursePresent++;
@@ -589,7 +591,7 @@ const DepartmentAttendanceChart: React.FC<{ data: { department: string; percenta
                     <div className="w-full max-w-[50px] bg-muted/30 rounded-t-lg relative h-full flex items-end overflow-hidden group-hover:bg-muted/50 transition-colors">
                         <div className={`w-full transition-all duration-1000 ease-out rounded-t-lg relative ${colorClass} opacity-90 group-hover:opacity-100`} style={{ height: `${height}%` }}><div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div></div>
                     </div>
-                    <div className="mt-3 text-center w-full"><p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider truncate px-1" title={item.department}>{item.department.substring(0, 3)}</p></div>
+                    <div className="mt-3 text-center w-full"><p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider truncate px-1" title={item.department}>{item.department ? item.department.substring(0, 3) : '???'}</p></div>
                 </div>
             );
         }) : <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs font-bold uppercase tracking-wider opacity-60">No data available</div>}
@@ -846,7 +848,7 @@ const UserDirectory = ({
                 if ((a.division || '') !== (b.division || '')) return (a.division || '').localeCompare(b.division || '');
                 if (a.rollNo && b.rollNo) return a.rollNo.localeCompare(b.rollNo, undefined, {numeric: true});
             }
-            return a.name.localeCompare(b.name);
+            return (a.name || '').localeCompare(b.name || '');
         });
     }, [users, searchTerm, yearFilter, divFilter, type, attFilter, attendanceMap]);
 
@@ -1322,20 +1324,20 @@ const DirectorPage: React.FC<DirectorPageProps> = (props) => {
 
     const hods = useMemo(() => { 
         if (!college) return []; 
-        return allUsers.filter((u: any) => (u.tag === 'HOD/Dean' || u.role === 'HOD/Dean') && u.collegeId === college.id);
+        return (allUsers || []).filter((u: any) => u && (u.tag === 'HOD/Dean' || u.role === 'HOD/Dean') && u.collegeId === college.id);
     }, [allUsers, college]);
     
-    const collegeUsers = useMemo(() => allUsers.filter(u => u.collegeId === college?.id), [allUsers, college]);
+    const collegeUsers = useMemo(() => (allUsers || []).filter(u => u && u.collegeId === college?.id), [allUsers, college]);
 
     const faculty = useMemo(() => collegeUsers.filter(u =>
-        (u.tag === 'Teacher' || u.tag === 'HOD/Dean') 
+        u && (u.tag === 'Teacher' || u.tag === 'HOD/Dean')
     ), [collegeUsers]);
 
     const students = useMemo(() => collegeUsers.filter(u =>
-        u.tag === 'Student' 
+        u && u.tag === 'Student'
     ).sort((a, b) => (a.rollNo || '').localeCompare(b.rollNo || '', undefined, { numeric: true })), [collegeUsers]);
 
-    const pendingApprovals = useMemo(() => { if (!college) return []; return allUsers.filter((u: any) => u.collegeId === college.id && !u.isApproved && u.isRegistered); }, [allUsers, college]);
+    const pendingApprovals = useMemo(() => { if (!college) return []; return (allUsers || []).filter((u: any) => u && u.collegeId === college.id && !u.isApproved && u.isRegistered); }, [allUsers, college]);
 
     const collegeCourses = useMemo(() => allCourses.filter((c: any) => c.collegeId === college?.id), [allCourses, college?.id]);
     const deptCourses = useMemo(() => collegeCourses.filter((c: any) => c.department === selectedDept), [collegeCourses, selectedDept]);
@@ -1392,8 +1394,8 @@ const DirectorPage: React.FC<DirectorPageProps> = (props) => {
     // REMOVED ISAPPROVED CHECK
     const allAcademicStaff = useMemo(() => {
         if (!college) return [];
-        return allUsers.filter((u: any) => 
-            u.collegeId === college.id && 
+        return (allUsers || []).filter((u: any) =>
+            u && u.collegeId === college.id &&
             (
                 u.tag === 'Teacher' || 
                 u.tag === 'HOD/Dean' || 
@@ -1418,11 +1420,13 @@ const DirectorPage: React.FC<DirectorPageProps> = (props) => {
         const todayStr = new Date().toDateString();
         collegeCourses.forEach(course => {
             course.attendanceRecords?.forEach(record => {
-                const isToday = new Date(record.date).toDateString() === todayStr;
-                Object.values(record.records).forEach((statusObj: any) => {
-                    globalTotal++; if (statusObj.status === 'present') globalPresent++;
-                    if (isToday) { todayTotal++; if (statusObj.status === 'present') todayPresent++; }
-                });
+                if (record && record.records) {
+                    const isToday = new Date(record.date).toDateString() === todayStr;
+                    Object.values(record.records).forEach((statusObj: any) => {
+                        globalTotal++; if (statusObj.status === 'present') globalPresent++;
+                        if (isToday) { todayTotal++; if (statusObj.status === 'present') todayPresent++; }
+                    });
+                }
             });
         });
         return {
@@ -1437,7 +1441,16 @@ const DirectorPage: React.FC<DirectorPageProps> = (props) => {
         return college.departments.map((dept: string) => {
             const courses = collegeCourses.filter((c: any) => c.department === dept);
             let present = 0, total = 0;
-            courses.forEach((c: any) => { c.attendanceRecords?.forEach((r: any) => { Object.values(r.records).forEach((status: any) => { total++; if (status.status === 'present') present++; }); }); });
+            courses.forEach((c: any) => {
+                c.attendanceRecords?.forEach((r: any) => {
+                    if (r && r.records) {
+                        Object.values(r.records).forEach((status: any) => {
+                            total++;
+                            if (status.status === 'present') present++;
+                        });
+                    }
+                });
+            });
             return { department: dept, percentage: total > 0 ? Math.round((present / total) * 100) : 0, totalStudents: total };
         }).sort((a: any, b: any) => b.percentage - a.percentage);
     }, [college, collegeCourses]);
@@ -1445,7 +1458,11 @@ const DirectorPage: React.FC<DirectorPageProps> = (props) => {
     const activeClassesForDept = useMemo(() => {
         const deptClassesRaw = college?.classes?.[selectedDept] || {};
         const classes: { year: number; division: string }[] = [];
-        Object.entries(deptClassesRaw).forEach(([year, divs]) => { (divs as string[]).forEach(div => classes.push({ year: parseInt(year), division: div })); });
+        Object.entries(deptClassesRaw).forEach(([year, divs]) => {
+            if (Array.isArray(divs)) {
+                (divs as string[]).forEach(div => classes.push({ year: parseInt(year), division: div }));
+            }
+        });
         return classes;
     }, [college, selectedDept]);
 
@@ -1464,9 +1481,11 @@ const DirectorPage: React.FC<DirectorPageProps> = (props) => {
             let p = 0, t = 0;
             courses.forEach(c => {
                 c.attendanceRecords?.forEach(r => {
-                    Object.values(r.records).forEach((s:any) => {
-                        t++; if(s.status === 'present') p++;
-                    });
+                    if (r && r.records) {
+                        Object.values(r.records).forEach((s:any) => {
+                            t++; if(s.status === 'present') p++;
+                        });
+                    }
                 });
             });
             const avg = t > 0 ? Math.round((p/t)*100) : 0;
@@ -1787,7 +1806,7 @@ const DirectorPage: React.FC<DirectorPageProps> = (props) => {
                             {/* NEW: Custom Class List View (Accordion Style) */}
                             <div className="flex flex-col gap-4">
                                 {activeClassesForDept.length > 0 ? (
-                                    activeClassesForDept.sort((a:any, b:any) => a.year - b.year || a.division.localeCompare(b.division)).map((cls: any) => {
+                                    activeClassesForDept.sort((a:any, b:any) => a.year - b.year || (a.division || '').localeCompare(b.division || '')).map((cls: any) => {
                                         const classKey = `${cls.year}-${cls.division}`;
                                         const isExpanded = expandedClass === classKey;
                                         const stats = classStats?.[classKey] || { count: 0, avg: 0 };
@@ -1860,7 +1879,7 @@ const DirectorPage: React.FC<DirectorPageProps> = (props) => {
                                                                     // Calculate Avg Attendance for this Subject
                                                                     let subTotal = 0, subPresent = 0;
                                                                     sub.attendanceRecords?.forEach((r: any) => {
-                                                                        if (r.records) {
+                                                                        if (r && r.records) {
                                                                             Object.values(r.records).forEach((s: any) => {
                                                                                 subTotal++;
                                                                                 if (s.status === 'present') subPresent++;
@@ -1976,6 +1995,7 @@ const DirectorPage: React.FC<DirectorPageProps> = (props) => {
                                     const daily = todayRecs > 0 ? Math.round((todayPresent/todayRecs)*100) : 0;
                                     const facultyCount = allUsers.filter(u => u.collegeId === college.id && u.department === dept && u.tag === 'Teacher').length;
                                     const studentCount = allUsers.filter((u:any)=>u.department === dept && u.tag === 'Student').length;
+                                    if (!dept) return null;
                                     return (
                                         <div key={dept} className="bg-card border border-border/60 rounded-[2rem] p-4 sm:p-6 shadow-sm hover:shadow-xl transition-all duration-500 group relative overflow-hidden flex flex-col border-b-4 hover:border-primary/40">
                                             <div className="flex justify-between items-start mb-4 sm:mb-6 relative z-10">
