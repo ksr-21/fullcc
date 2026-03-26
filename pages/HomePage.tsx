@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { createPortal } from 'react-dom'; 
 import type { User, Post, Group, Story, Notice, ReactionType } from '../types';
 import Header from '../components/Header';
 import Feed from '../components/Feed';
@@ -14,51 +13,9 @@ import CreateOpportunityModal from '../components/CreateOpportunityModal';
 import CreateProjectModal from '../components/CreateProjectModal';
 import CreateRoadmapModal from '../components/CreateRoadmapModal';
 import InlineCreatePost from '../components/InlineCreatePost';
+import ImageLightbox from '../components/ImageLightbox';
 import { auth } from '../api';
-import { SparkleIcon, CloseIcon } from '../components/Icons';
-
-// --- NEW HELPER COMPONENT WITH PORTAL AND MAX Z-INDEX ---
-const ImageLightbox = ({ src, onClose }: { src: string | null, onClose: () => void }) => {
-    // Prevent scrolling when lightbox is open
-    useEffect(() => {
-        if (src) {
-            document.body.style.overflow = 'hidden';
-        }
-        return () => {
-            document.body.style.overflow = 'unset';
-        };
-    }, [src]);
-
-    if (!src) return null;
-
-    // Use React Portal + Inline Z-Index to force it above everything
-    return createPortal(
-        <div 
-            style={{ zIndex: 2147483647 }} // Maximum allowable Z-Index in browsers
-            className="fixed inset-0 bg-black/95 backdrop-blur-md flex items-center justify-center p-4 sm:p-8 animate-fade-in touch-none" 
-            onClick={onClose} 
-        >
-            <button 
-                onClick={onClose} 
-                style={{ zIndex: 2147483647 }} // Ensure button is also at max height
-                className="absolute top-6 right-6 p-3 bg-white/10 hover:bg-white/20 rounded-full text-white transition-all transform hover:rotate-90 backdrop-blur-md border border-white/10 shadow-2xl cursor-pointer"
-            >
-                <CloseIcon className="w-8 h-8"/>
-            </button>
-            <div 
-                className="relative w-full max-w-5xl max-h-[85vh] flex items-center justify-center"
-                onClick={(e) => e.stopPropagation()} 
-            >
-                <img 
-                    src={src} 
-                    alt="Full View" 
-                    className="max-w-full max-h-full w-auto h-auto object-contain rounded-lg shadow-2xl border border-white/5 bg-black" 
-                />
-            </div>
-        </div>,
-        document.body
-    );
-};
+import { SparkleIcon } from '../components/Icons';
 
 interface HomePageProps {
   currentUser: User;
@@ -82,7 +39,7 @@ interface HomePageProps {
   onDeletePost: (postId: string) => void;
   onDeleteComment: (postId: string, commentId: string) => void;
   onCreateOrOpenConversation: (otherUserId: string) => Promise<string>;
-  onSharePostAsMessage: (conversationId: string, authorName: string, postContent: string) => void;
+  onSharePostAsMessages: (userIds: string[], authorName: string, postContent: string, imageUrl?: string) => void;
   onSharePost: (originalPost: Post, commentary: string, shareTarget: { type: 'feed' | 'group'; id?: string }) => void;
   onToggleSavePost: (postId: string) => void;
   onDeleteNotice: (noticeId: string) => void;

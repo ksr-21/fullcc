@@ -22,7 +22,7 @@ interface EventsPageProps {
   onDeletePost: (postId: string) => void;
   onDeleteComment: (postId: string, commentId: string) => void;
   onCreateOrOpenConversation: (otherUserId: string) => Promise<string>;
-  onSharePostAsMessage: (conversationId: string, authorName: string, postContent: string) => void;
+  onSharePostAsMessages: (userIds: string[], authorName: string, postContent: string, imageUrl?: string) => void;
   onSharePost: (originalPost: Post, commentary: string, shareTarget: { type: 'feed' | 'group'; id?: string }) => void;
   onToggleSavePost: (postId: string) => void;
 }

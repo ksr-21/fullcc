@@ -16,7 +16,7 @@ interface PostCardProps {
   onDeletePost: (postId: string) => void;
   onDeleteComment: (postId: string, commentId: string) => void;
   onCreateOrOpenConversation: (otherUserId: string) => Promise<string>;
-  onSharePostAsMessage: (conversationId: string, authorName: string, postContent: string, imageUrl?: string) => void;
+  onSharePostAsMessages: (userIds: string[], authorName: string, postContent: string, imageUrl?: string) => void;
   onSharePost: (originalPost: Post, commentary: string, shareTarget: { type: 'feed' | 'group'; id?: string }) => void;
   onToggleSavePost: (postId: string) => void;
   groups: Group[];
@@ -169,23 +169,17 @@ const PostCard: React.FC<PostCardProps> = (props) => {
     return () => { if (timerId) clearInterval(timerId); };
   }, [post.isEvent, post.eventDetails?.date]);
 
-  const handleShareToUser = async (uid: string) => {
-      try {
-          const convoId = await onCreateOrOpenConversation(uid);
-          
-          // --- FIX: Pass the first image URL if it exists ---
-          const imageUrl = post.mediaUrls && post.mediaUrls.length > 0 ? post.mediaUrls[0] : undefined;
-          
-          onSharePostAsMessage(
-              convoId, 
-              author?.name || 'Anonymous', 
-              post.content || 'media', 
-              imageUrl // <--- Pass the image URL here
-          );
-          setShareModalState({isOpen: false, defaultTab: 'message'});
-      } catch (e) {
-          console.error(e);
-      }
+  const handleShareToUsers = async (uids: string[]) => {
+      // --- FIX: Pass the first image URL if it exists ---
+      const imageUrl = post.mediaUrls && post.mediaUrls.length > 0 ? post.mediaUrls[0] : undefined;
+
+      onSharePostAsMessages(
+          uids,
+          author?.name || 'Anonymous',
+          post.content || 'media',
+          imageUrl
+      );
+      setShareModalState({isOpen: false, defaultTab: 'message'});
   };
 
   if (!author && !post.isConfession) return null;
@@ -477,7 +471,7 @@ const PostCard: React.FC<PostCardProps> = (props) => {
         onClose={() => setShareModalState({isOpen: false, defaultTab: 'message'})} 
         currentUser={currentUser} 
         users={Object.values(users)} 
-        onShareToUser={handleShareToUser} 
+        onShareToUsers={handleShareToUsers}
         postToShare={post} 
         onSharePost={onSharePost} 
         groups={groups} 

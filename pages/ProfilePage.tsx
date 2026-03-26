@@ -42,7 +42,7 @@ interface ProfilePageProps {
   onDeletePost: (postId: string) => void;
   onDeleteComment: (postId: string, commentId: string) => void;
   onCreateOrOpenConversation: (otherUserId: string) => Promise<string>;
-  onSharePostAsMessage: (conversationId: string, authorName: string, postContent: string) => void;
+  onSharePostAsMessages: (userIds: string[], authorName: string, postContent: string, imageUrl?: string) => void;
   onSharePost: (originalPost: Post, commentary: string, shareTarget: { type: 'feed' | 'group'; id?: string }) => void;
   onToggleSavePost: (postId: string) => void;
   isAdminView?: boolean;
@@ -64,7 +64,7 @@ const StatItem = ({ label, value, icon: Icon, onClick, active }: any) => (
 );
 
 const ProfilePage: React.FC<ProfilePageProps> = (props) => {
-    const { profileUserId, currentUser, users, posts, groups, onNavigate, currentPath, onAddPost, onAddAchievement, onAddInterest, onUpdateProfile, onReaction, onAddComment, onDeletePost, onDeleteComment, onCreateOrOpenConversation, onSharePostAsMessage, onSharePost, onToggleSavePost, isAdminView, onBackToAdmin, colleges, courses } = props;
+    const { profileUserId, currentUser, users, posts, groups, onNavigate, currentPath, onAddPost, onAddAchievement, onAddInterest, onUpdateProfile, onReaction, onAddComment, onDeletePost, onDeleteComment, onCreateOrOpenConversation, onSharePostAsMessages, onSharePost, onToggleSavePost, isAdminView, onBackToAdmin, colleges, courses } = props;
 
     const [activeTab, setActiveTab] = useState<'posts' | 'about' | 'projects' | 'saved'>('posts');
     const [isEditing, setIsEditing] = useState(false);
@@ -318,7 +318,7 @@ const ProfilePage: React.FC<ProfilePageProps> = (props) => {
                                 onDeletePost={onDeletePost}
                                 onDeleteComment={onDeleteComment}
                                 onCreateOrOpenConversation={onCreateOrOpenConversation}
-                                onSharePostAsMessage={onSharePostAsMessage}
+                                onSharePostAsMessages={onSharePostAsMessages}
                                 onSharePost={onSharePost}
                                 onToggleSavePost={onToggleSavePost}
                             />
