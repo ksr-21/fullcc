@@ -78,28 +78,29 @@ const MonthlyAttendancePage: React.FC<MonthlyAttendancePageProps> = ({
         });
 
         // 2. Add "virtual" records for timestamps in editedRecords that aren't in existing
-        const existingTimestamps = new Set((course.attendanceRecords || []).map(r => r.date));
+        const existingTimestamps = new Set((course.attendanceRecords || []).map(r => new Date(r.date).getTime()));
         Object.keys(editedRecords).forEach(tsStr => {
             const ts = Number(tsStr);
             if (!existingTimestamps.has(ts)) {
                 const iso = getLocalISOString(new Date(ts));
                 if (!map[iso]) map[iso] = [];
-                map[iso].push({ date: ts, records: {} });
+                map[iso].push({ date: ts, records: {} } as any);
             }
         });
 
         // Sort sessions by time within each day
-        Object.keys(map).forEach(iso => map[iso].sort((a,b) => a.date - b.date));
+        Object.keys(map).forEach(iso => map[iso].sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime()));
         return map;
     }, [course.attendanceRecords, editedRecords]);
 
     const getStatusForCell = (dateIso: string, studentId: string): { status?: AttendanceStatus, sessionDate: number }[] => {
         const records = attendanceByDate[dateIso] || [];
         return records.map(r => {
-            if (Object.prototype.hasOwnProperty.call(editedRecords[r.date] || {}, studentId)) {
-                return { status: editedRecords[r.date][studentId] || undefined, sessionDate: r.date };
+            const ts = new Date(r.date).getTime();
+            if (Object.prototype.hasOwnProperty.call(editedRecords[ts] || {}, studentId)) {
+                return { status: editedRecords[ts][studentId] || undefined, sessionDate: ts };
             }
-            return { status: r.records?.[studentId]?.status as AttendanceStatus | undefined, sessionDate: r.date };
+            return { status: r.records?.[studentId]?.status as AttendanceStatus | undefined, sessionDate: ts };
         });
     };
 
@@ -108,11 +109,11 @@ const MonthlyAttendancePage: React.FC<MonthlyAttendancePageProps> = ({
         
         let effectiveSessionDate = sessionDate;
         if (!effectiveSessionDate && fallbackDateIso) {
-            const [y, m, d] = fallbackDateIso.split('-').map(Number);
-            effectiveSessionDate = new Date(y, m - 1, d).getTime();
+            const [y_part, m_part, d_part] = fallbackDateIso.split('-').map(Number);
+            effectiveSessionDate = new Date(y_part, m_part - 1, d_part).getTime();
         }
 
-        const record = (course.attendanceRecords || []).find(r => r.date === effectiveSessionDate);
+        const record = (course.attendanceRecords || []).find(r => new Date(r.date).getTime() === effectiveSessionDate);
         const current = Object.prototype.hasOwnProperty.call(editedRecords[effectiveSessionDate] || {}, studentId) 
             ? editedRecords[effectiveSessionDate][studentId] 
             : record?.records?.[studentId]?.status;
@@ -140,17 +141,16 @@ const MonthlyAttendancePage: React.FC<MonthlyAttendancePageProps> = ({
         let absent = 0;
         let late = 0;
 
-        // Collect all relevant session dates (existing + newly edited placeholders)
-        const editedSessionDates = Object.keys(editedRecords).map(Number);
-        
         daysInMonth.forEach(d => {
             const existingRecords = attendanceByDate[d.iso] || [];
-            const dayStart = new Date(d.iso).getTime();
+            const [y_p, m_p, d_p] = d.iso.split('-').map(Number);
+            const dayStart = new Date(y_p, m_p - 1, d_p).getTime();
             
             // Check existing sessions
             existingRecords.forEach(record => {
-                const status = Object.prototype.hasOwnProperty.call(editedRecords[record.date] || {}, studentId)
-                    ? editedRecords[record.date][studentId]
+                const ts = new Date(record.date).getTime();
+                const status = Object.prototype.hasOwnProperty.call(editedRecords[ts] || {}, studentId)
+                    ? editedRecords[ts][studentId]
                     : record.records?.[studentId]?.status;
 
                 if (status) {
@@ -242,7 +242,7 @@ const MonthlyAttendancePage: React.FC<MonthlyAttendancePageProps> = ({
                     row.push('');
                 } else {
                     records.forEach(record => {
-                        if (record.records[s.id]) {
+                        if (record.records && record.records[s.id]) {
                             const status = record.records[s.id].status as AttendanceStatus;
                             const char = status === 'present' ? 'P' : status === 'absent' ? 'A' : 'L';
                             row.push(char);
@@ -272,11 +272,10 @@ const MonthlyAttendancePage: React.FC<MonthlyAttendancePageProps> = ({
         if (!canManageAttendance) return;
         const existing = course.attendanceRecords || [];
         
-        const editedTimestamps = new Set(Object.keys(editedRecords).map(Number));
-
         // 1. Update existing records with edits
         const updatedExisting = existing.map(record => {
-            const edits = editedRecords[record.date];
+            const ts = new Date(record.date).getTime();
+            const edits = editedRecords[ts];
             if (!edits) return record;
 
             const mergedRecords: Record<string, { status: AttendanceStatus; note?: string }> = { ...record.records };
@@ -294,7 +293,7 @@ const MonthlyAttendancePage: React.FC<MonthlyAttendancePageProps> = ({
         });
 
         // 2. Identify new records (where timestamp in editedRecords doesn't exist in courses.attendanceRecords)
-        const existingTimestamps = new Set(existing.map(r => r.date));
+        const existingTimestamps = new Set(existing.map(r => new Date(r.date).getTime()));
         const newRecords: AttendanceRecord[] = [];
         Object.entries(editedRecords).forEach(([tsStr, recordsMap]) => {
             const ts = Number(tsStr);

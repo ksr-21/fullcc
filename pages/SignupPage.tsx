@@ -1,27 +1,7 @@
 import React, { useState, useRef } from 'react';
-import { auth, FieldValue, db } from '../api';
+import { auth, FieldValue, db, uploadToCloudinary } from '../api';
 import type { User } from '../types';
 import { MailIcon, LockIcon, CameraIcon, UserIcon, XCircleIcon, ShieldIcon } from '../components/Icons';
-
-// Cloudinary Config
-const CLOUDINARY_CLOUD_NAME = "dwhm79co7";
-const CLOUDINARY_UPLOAD_PRESET = "campus_connect_uploads";
-
-const uploadToCloudinary = async (file: File): Promise<string> => {
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
-    formData.append('resource_type', 'auto');
-    
-    const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/auto/upload`, {
-        method: 'POST',
-        body: formData
-    });
-    
-    if (!response.ok) throw new Error('Upload failed');
-    const data = await response.json();
-    return data.secure_url;
-};
 
 interface SignupPageProps {
     onNavigate: (path: string) => void;
@@ -32,7 +12,6 @@ const SignupPage: React.FC<SignupPageProps> = ({ onNavigate }) => {
     const [error, setError] = useState('');
 
     // Form State
-    const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [inviteCode, setInviteCode] = useState('');
@@ -161,7 +140,7 @@ const SignupPage: React.FC<SignupPageProps> = ({ onNavigate }) => {
             const newUserData = {
                 ...inviteData,
                 id: newId,
-                name: name.trim() || inviteData.name,
+                name: inviteData.name,
                 email: cleanEmail,
                 collegeId: resolvedCollegeId || null,
                 isRegistered: true,
@@ -290,7 +269,7 @@ const SignupPage: React.FC<SignupPageProps> = ({ onNavigate }) => {
                         <div className="flex flex-col items-center mb-2">
                             <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
                                 <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-border shadow-sm ring-2 ring-transparent group-hover:ring-primary/20 transition-all bg-muted">
-                                    <img src={avatarPreview || `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'User')}&background=random`} alt="Avatar" className="w-full h-full object-cover"/>
+                                    <img src={avatarPreview || `https://ui-avatars.com/api/?name=${encodeURIComponent('User')}&background=random`} alt="Avatar" className="w-full h-full object-cover"/>
                                 </div>
                                 <div className="absolute bottom-0 right-0 bg-primary text-primary-foreground p-1.5 rounded-full shadow-md group-hover:scale-110 transition-transform border border-card">
                                     <CameraIcon className="w-3 h-3"/>
@@ -298,16 +277,6 @@ const SignupPage: React.FC<SignupPageProps> = ({ onNavigate }) => {
                                 <input type="file" accept="image/*" ref={fileInputRef} onChange={handleFileChange} className="hidden"/>
                             </div>
                             <span className="text-[10px] text-muted-foreground mt-2 uppercase font-bold tracking-wide">Upload Photo</span>
-                        </div>
-
-                        <div>
-                            <label className="block text-xs font-bold uppercase text-muted-foreground mb-1.5">Full Name</label>
-                            <div className="relative group">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <UserIcon className="h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                                </div>
-                                <input type="text" value={name} onChange={(e) => setName(e.target.value)} required placeholder="John Doe" className="appearance-none block w-full pl-9 pr-3 py-3 border border-border rounded-xl bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-primary transition-all duration-200 sm:text-sm"/>
-                            </div>
                         </div>
 
                         <div>

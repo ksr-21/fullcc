@@ -122,14 +122,13 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
             {/* Editable Fields (Name & Bio) */}
             <div className="space-y-4">
                 <div className="space-y-1.5">
-                  <label htmlFor="name" className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-1">Full Name</label>
+                  <label htmlFor="name" className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-1">Full Name (Managed by Institution)</label>
                   <input 
                     type="text" 
                     id="name" 
                     value={name} 
-                    onChange={e => setName(e.target.value)} 
-                    required 
-                    className="w-full bg-input border border-border rounded-2xl px-5 py-3.5 text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none transition-all shadow-inner" 
+                    readOnly
+                    className="w-full bg-muted/30 border border-border rounded-2xl px-5 py-3.5 text-sm font-bold outline-none cursor-not-allowed opacity-70 shadow-inner"
                     placeholder="Enter your name"
                   />
                 </div>
