@@ -781,7 +781,8 @@ const UserDirectory = ({
     availableYears,
     existingEmails = [],
     activeClasses = [],
-    attendanceMap = {} // NEW PROP
+    attendanceMap = {}, // NEW PROP
+    currentUser // Added currentUser
 }: { 
     users?: User[], 
     type: 'Student' | 'Teacher', 
@@ -795,6 +796,7 @@ const UserDirectory = ({
     existingEmails?: string[];
     activeClasses?: { year: number, division: string }[];
     attendanceMap?: Record<string, number>;
+    currentUser: User;
 }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [isSingleModalOpen, setIsSingleModalOpen] = useState(false);
@@ -1008,13 +1010,16 @@ const UserDirectory = ({
                                                     </td>
                                                     <td className="p-4 text-right">
                                                         <div className="flex items-center justify-end gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-                                                            <button 
-                                                                onClick={() => setEditingUser(user)}
-                                                                className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
-                                                                title="Edit User"
-                                                            >
-                                                                <EditIcon className="w-4 h-4"/>
-                                                            </button>
+                                                            {/* Director cannot edit names of Super Admin or themselves */}
+                                                            {!(user.tag === 'Super Admin' || user.id === currentUser.id) && (
+                                                                <button
+                                                                    onClick={() => setEditingUser(user)}
+                                                                    className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+                                                                    title="Edit User"
+                                                                >
+                                                                    <EditIcon className="w-4 h-4"/>
+                                                                </button>
+                                                            )}
                                                             <button 
                                                                 onClick={() => handleDelete(user.id)} 
                                                                 className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
@@ -2024,7 +2029,7 @@ const DirectorPage: React.FC<DirectorPageProps> = (props) => {
                             </div>
                         </div>
                     )}
-                    {activeSection === 'faculty' && <UserDirectory type="Teacher" users={deptFaculty} onCreateUser={handleCreateUser} onCreateUsersBatch={onCreateUsersBatch} department={selectedDept} activeCourses={deptCourses} onDeleteUser={onDeleteUser} onUpdateUser={onUpdateUser} existingEmails={allUserEmails} />}
+                    {activeSection === 'faculty' && <UserDirectory type="Teacher" users={deptFaculty} onCreateUser={handleCreateUser} onCreateUsersBatch={onCreateUsersBatch} department={selectedDept} activeCourses={deptCourses} onDeleteUser={onDeleteUser} onUpdateUser={onUpdateUser} existingEmails={allUserEmails} currentUser={currentUser} />}
                     {activeSection === 'students' && (
                         <UserDirectory 
                             activeClasses={activeClassesForDept} 
@@ -2039,6 +2044,7 @@ const DirectorPage: React.FC<DirectorPageProps> = (props) => {
                             availableYears={activeYearsForDept} 
                             existingEmails={allUserEmails}
                             attendanceMap={studentAttendanceMap} // Pass the attendance map
+                            currentUser={currentUser}
                         />
                     )}
                     {activeSection === 'approvals' && (

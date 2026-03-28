@@ -188,17 +188,18 @@ const CourseDetailPage: React.FC<CourseDetailPageProps> = ({
 
         const dayRecords = (course.attendanceRecords || []).filter(r => 
             new Date(r.date).toDateString() === new Date(attendanceDate).toDateString()
-        ).sort((a, b) => a.date - b.date);
+        ).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
         let record: AttendanceRecord | undefined;
         if (selectedSessionDate && selectedSessionDate !== 0) {
-            record = dayRecords.find(r => r.date === selectedSessionDate);
+            const selTs = new Date(selectedSessionDate).getTime();
+            record = dayRecords.find(r => new Date(r.date).getTime() === selTs);
         } else if (selectedSessionDate === 0) {
             // Explicitly in "New Session" mode
             record = undefined;
         } else if (dayRecords.length > 0) {
             record = dayRecords[0];
-            setSelectedSessionDate(record.date);
+            setSelectedSessionDate(new Date(record.date).getTime());
         }
 
         if (record) {
@@ -221,7 +222,7 @@ const CourseDetailPage: React.FC<CourseDetailPageProps> = ({
         
         // If we're starting a new session (selectedSessionDate is 0 or not in records)
         // or updating an existing one.
-        let timestamp = (selectedSessionDate && selectedSessionDate !== 0) ? selectedSessionDate : Date.now();
+        let timestamp = (selectedSessionDate && selectedSessionDate !== 0) ? new Date(selectedSessionDate).getTime() : Date.now();
         
         if (!selectedSessionDate || selectedSessionDate === 0) {
             // New session: Combine selected date with current time
@@ -299,13 +300,17 @@ const CourseDetailPage: React.FC<CourseDetailPageProps> = ({
         const toTs = new Date(exportToDate).getTime() + 86400000; // end of day
 
         const recordsInRange = (course.attendanceRecords || [])
-            .filter(r => r.date >= fromTs && r.date < toTs)
-            .sort((a, b) => a.date - b.date);
+            .filter(r => {
+                const ts = new Date(r.date).getTime();
+                return ts >= fromTs && ts < toTs;
+            })
+            .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
         const csvHeaders = ['roll no.', 'name', ...recordsInRange.map(r => {
             const d = new Date(r.date);
             const dateStr = `${d.getDate()}/${d.getMonth() + 1}`;
-            return r.label ? `"${dateStr} - ${r.label}"` : `"${dateStr}"`;
+            const label = r.label ? ` - ${r.label.replace(/"/g, '""')}` : '';
+            return `"${dateStr}${label}"`;
         }), 'percentage'];
         const csvRows = [csvHeaders];
 
@@ -319,7 +324,7 @@ const CourseDetailPage: React.FC<CourseDetailPageProps> = ({
             let totalSessionsMarked = 0;
 
             recordsInRange.forEach(record => {
-                if (record.records[s.id]) {
+                if (record.records && record.records[s.id]) {
                     const status = record.records[s.id].status;
                     const char = status === 'present' ? 'P' : status === 'absent' ? 'A' : 'L';
                     row.push(char);
@@ -349,7 +354,7 @@ const CourseDetailPage: React.FC<CourseDetailPageProps> = ({
         let total = 0, present = 0;
         if (course.attendanceRecords) {
             course.attendanceRecords.forEach(r => {
-                if (r.records?.[studentId]) {
+                if (r.records && r.records[studentId]) {
                     total++;
                     if (r.records[studentId].status === 'present') present++;
                 }
@@ -460,16 +465,20 @@ const CourseDetailPage: React.FC<CourseDetailPageProps> = ({
                                                     <div className="space-y-2 max-h-40 overflow-y-auto custom-scrollbar pr-1">
                                                         {(course.attendanceRecords || [])
                                                             .filter(r => new Date(r.date).toDateString() === new Date(attendanceDate).toDateString())
-                                                            .sort((a,b) => a.date - b.date)
-                                                            .map((r, idx) => (
-                                                                <button 
-                                                                    key={r.date}
-                                                                    onClick={() => setSelectedSessionDate(r.date)}
-                                                                    className={`w-full text-left p-2 rounded-lg text-xs font-bold transition-all border ${selectedSessionDate === r.date ? 'bg-primary text-white border-primary shadow-md' : 'bg-background text-foreground border-border hover:border-primary/50'}`}
-                                                                >
-                                                                    {idx + 1}. {r.label || new Date(r.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                                                </button>
-                                                            ))
+                                                            .sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+                                                            .map((r, idx) => {
+                                                                const rTs = new Date(r.date).getTime();
+                                                                const isSelected = selectedSessionDate !== null && selectedSessionDate !== 0 && new Date(selectedSessionDate).getTime() === rTs;
+                                                                return (
+                                                                    <button
+                                                                        key={rTs}
+                                                                        onClick={() => setSelectedSessionDate(rTs)}
+                                                                        className={`w-full text-left p-2 rounded-lg text-xs font-bold transition-all border ${isSelected ? 'bg-primary text-white border-primary shadow-md' : 'bg-background text-foreground border-border hover:border-primary/50'}`}
+                                                                    >
+                                                                        {idx + 1}. {r.label || new Date(r.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                                    </button>
+                                                                );
+                                                            })
                                                         }
                                                         {!(course.attendanceRecords || []).some(r => new Date(r.date).toDateString() === new Date(attendanceDate).toDateString()) && selectedSessionDate !== 0 && (
                                                             <p className="text-[10px] text-muted-foreground font-bold italic">No sessions started yet.</p>

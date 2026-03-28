@@ -49,17 +49,27 @@ interface ProfilePageProps {
   onBackToAdmin?: () => void;
 }
 
-const StatItem = ({ label, value, icon: Icon, onClick, active }: any) => (
-    <button 
-        onClick={onClick}
-        disabled={!onClick}
-        className={`flex flex-col items-center sm:items-start group min-w-[60px] transition-all duration-200 ${onClick ? 'cursor-pointer hover:-translate-y-0.5' : 'cursor-default'}`}
-    >
-        <div className={`flex items-center gap-1.5 font-black text-2xl sm:text-3xl leading-none transition-colors ${active ? 'text-primary' : 'text-foreground group-hover:text-primary'}`}>
-            {Icon && <Icon className={`w-5 h-5 sm:w-6 sm:h-6 ${active ? 'text-primary' : 'text-muted-foreground/50 group-hover:text-primary'}`}/>}
+const StatItem = ({ label, value, active }: any) => (
+    <div className="flex flex-col items-center sm:items-start group">
+        <div className={`font-black text-xl sm:text-2xl leading-none transition-colors ${active ? 'text-primary' : 'text-foreground'}`}>
             {value}
         </div>
-        <span className={`text-[10px] sm:text-xs uppercase font-bold tracking-widest mt-1.5 transition-colors ${active ? 'text-primary/80' : 'text-muted-foreground group-hover:text-primary/80'}`}>{label}</span>
+        <span className="text-[9px] uppercase font-black tracking-widest mt-1 text-muted-foreground/60">{label}</span>
+    </div>
+);
+
+const ProfileTabBtn = ({ id, label, icon: Icon, active, onClick }: any) => (
+    <button
+        onClick={() => onClick(id)}
+        className={`w-full flex items-center gap-4 px-6 py-4 rounded-2xl transition-all duration-300 group relative overflow-hidden ${
+            active
+            ? 'bg-primary/10 text-primary border-primary/10'
+            : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+        }`}
+    >
+        {active && <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary"></div>}
+        <Icon className={`w-5 h-5 transition-transform group-hover:scale-110 ${active ? 'text-primary' : 'opacity-50 group-hover:opacity-100'}`} />
+        <span className={`text-[11px] font-black uppercase tracking-[0.2em] ${active ? 'opacity-100' : 'opacity-70 group-hover:opacity-100'}`}>{label}</span>
     </button>
 );
 
@@ -169,7 +179,13 @@ const ProfilePage: React.FC<ProfilePageProps> = (props) => {
     if (!profileUser) return <div className="min-h-screen flex items-center justify-center">User not found.</div>;
 
     return (
-        <div className="bg-background min-h-screen pb-20">
+        <div className="bg-background min-h-screen relative flex flex-col">
+            {/* Ambient Background */}
+            <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
+                <div className="absolute top-[10%] left-[15%] w-[40%] h-[40%] rounded-full bg-primary/5 blur-[120px] animate-pulse"></div>
+                <div className="absolute bottom-[10%] right-[15%] w-[35%] h-[35%] rounded-full bg-secondary/5 blur-[100px]"></div>
+            </div>
+
             {/* Director's View Mode Header */}
             {isDirector && !isOwnProfile && (
                 <div className="bg-slate-950 text-white px-6 py-3 flex items-center justify-between shadow-2xl z-50 sticky top-0 border-b border-white/5">
@@ -191,233 +207,317 @@ const ProfilePage: React.FC<ProfilePageProps> = (props) => {
 
             <Header currentUser={currentUser} onLogout={handleLogout} onNavigate={onNavigate} currentPath={currentPath} />
             
-            <main className="container mx-auto px-0 md:px-4 pt-0 md:pt-6 max-w-4xl text-left">
+            <main className="flex-1 container mx-auto px-4 lg:px-8 py-6 relative z-10">
                  {(isAdminView && onBackToAdmin) && (
-                    <button onClick={onBackToAdmin} className="flex items-center text-sm text-primary hover:underline mb-4 font-medium px-4 md:px-0">
+                    <button onClick={onBackToAdmin} className="flex items-center text-sm text-primary hover:underline mb-4 font-medium">
                         <ArrowLeftIcon className="w-4 h-4 mr-2"/> Back to Admin
                     </button>
                 )}
 
-                {/* Profile Header Card */}
-                <div className="bg-card md:rounded-3xl border-b md:border border-border shadow-sm overflow-hidden relative mb-6">
-                    <div className="h-32 md:h-48 bg-gradient-to-r from-indigo-500 via-purple-600 to-pink-500 relative">
-                        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-30 mix-blend-overlay"></div>
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                    {/* Left Sidebar: Tabs & Account */}
+                    <div className="lg:col-span-3 hidden lg:block sticky top-24 space-y-8">
+                        <div className="space-y-2">
+                            <h3 className="px-6 text-[10px] font-black text-muted-foreground/60 uppercase tracking-[0.3em] mb-4">The Atelier</h3>
+                            <div className="space-y-1">
+                                <ProfileTabBtn id="posts" label="Posts" icon={PostIcon} active={activeTab === 'posts'} onClick={setActiveTab} />
+                                <ProfileTabBtn id="about" label="About" icon={StarIcon} active={activeTab === 'about'} onClick={setActiveTab} />
+                                <ProfileTabBtn id="projects" label="Projects" icon={CodeIcon} active={activeTab === 'projects'} onClick={setActiveTab} />
+                                {isOwnProfile && <ProfileTabBtn id="saved" label="Saved" icon={BookmarkIcon} active={activeTab === 'saved'} onClick={setActiveTab} />}
+                            </div>
+                        </div>
+
+                        <div className="h-px bg-gradient-to-r from-transparent via-border/50 to-transparent mx-6"></div>
+
+                        <div className="space-y-1">
+                            <button className="w-full flex items-center gap-4 px-6 py-4 rounded-2xl text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-all group">
+                                <PlusIcon className="w-5 h-5 opacity-50 group-hover:opacity-100 transition-opacity" />
+                                <span className="text-[11px] font-black uppercase tracking-[0.2em]">Settings</span>
+                            </button>
+                            <button onClick={handleLogout} className="w-full flex items-center gap-4 px-6 py-4 rounded-2xl text-muted-foreground hover:bg-rose-500/10 hover:text-rose-500 transition-all group">
+                                <ArrowLeftIcon className="w-5 h-5 opacity-50 group-hover:opacity-100 transition-opacity rotate-180" />
+                                <span className="text-[11px] font-black uppercase tracking-[0.2em]">Logout</span>
+                            </button>
+                        </div>
                     </div>
 
-                    <div className="px-4 md:px-8 pb-4">
-                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end -mt-12 mb-4">
-                            <div className="relative">
-                                <div className="p-1 bg-card rounded-full">
+                    {/* Center Content: Header Card + Feed */}
+                    <div className="lg:col-span-6 space-y-6">
+                        {/* Profile Header Card */}
+                        <div className="bg-card rounded-[2.5rem] border border-border/60 shadow-xl overflow-hidden relative group/header">
+                            <div className="p-8 flex flex-col sm:flex-row items-center sm:items-start gap-8">
+                                <div className="relative group cursor-pointer" onClick={() => isOwnProfile && setIsEditing(true)}>
                                     <Avatar 
                                         src={profileUser.avatarUrl} 
                                         name={profileUser.name} 
                                         size="xl" 
-                                        className="w-24 h-24 md:w-32 md:h-32 border-4 border-card bg-card object-cover shadow-md"
+                                        className="w-32 h-32 md:w-40 md:h-40 rounded-[2.5rem] border-4 border-background bg-muted object-cover shadow-2xl transition-transform duration-500 group-hover:scale-105"
+                                    />
+                                    {isOwnProfile && (
+                                        <div className="absolute -bottom-2 -right-2 bg-primary text-primary-foreground p-2.5 rounded-2xl shadow-xl border-4 border-card group-hover:scale-110 transition-transform">
+                                            <PlusIcon className="w-4 h-4 rotate-45" />
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="flex-1 flex flex-col items-center sm:items-start text-center sm:text-left pt-2">
+                                    <h1 className="text-3xl md:text-4xl font-black text-foreground tracking-tight leading-none mb-1">
+                                        {profileUser.name}
+                                    </h1>
+                                    <p className="text-xs font-black text-primary uppercase tracking-[0.2em] mb-6">
+                                        {profileUser.tag === 'Director' ? 'Director of Visual Systems' : `${profileUser.tag} • ${profileUser.department}`}
+                                    </p>
+
+                                    <div className="flex gap-8 mb-8">
+                                        <StatItem label="Clubs" value={userGroups.length} />
+                                        <StatItem label="Posts" value={userPosts.length} />
+                                        <StatItem label="Projects" value={userProjects.length} />
+                                    </div>
+
+                                    <div className="flex gap-3 w-full sm:w-auto">
+                                        {isOwnProfile ? (
+                                            <button onClick={() => setIsEditing(true)} className="flex-1 sm:flex-none py-3 px-8 rounded-2xl bg-primary text-primary-foreground font-black text-[10px] uppercase tracking-widest hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 active:scale-95">
+                                                Edit Profile
+                                            </button>
+                                        ) : (
+                                            <>
+                                                <button className="flex-1 sm:flex-none py-3 px-8 rounded-2xl bg-primary text-primary-foreground font-black text-[10px] uppercase tracking-widest hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 active:scale-95">
+                                                    Follow
+                                                </button>
+                                                <button onClick={handleStartConversation} className="flex-1 sm:flex-none py-3 px-8 rounded-2xl bg-muted/50 text-foreground font-black text-[10px] uppercase tracking-widest hover:bg-muted transition-all border border-border active:scale-95">
+                                                    Message
+                                                </button>
+                                            </>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Mobile Tabs */}
+                        <div className="lg:hidden flex bg-card rounded-2xl border border-border p-1 overflow-x-auto no-scrollbar mb-4">
+                            {['posts', 'about', 'projects', ...(isOwnProfile ? ['saved'] : [])].map((tab: any) => (
+                                <button
+                                    key={tab}
+                                    onClick={() => setActiveTab(tab)}
+                                    className={`flex-1 py-2.5 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                                        activeTab === tab
+                                        ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20'
+                                        : 'text-muted-foreground hover:text-foreground'
+                                    }`}
+                                >
+                                    {tab}
+                                </button>
+                            ))}
+                        </div>
+
+                        <div className="min-h-[300px]">
+                            {activeTab === 'posts' && (
+                                <div className="animate-fade-in space-y-6">
+                                    {isOwnProfile && (
+                                        <InlineCreatePost user={currentUser} onOpenCreateModal={handleCreateClick} />
+                                    )}
+                                    <Feed
+                                        key={profileUser.id}
+                                        posts={userPosts}
+                                        users={users}
+                                        currentUser={currentUser}
+                                        groups={groups}
+                                        onNavigate={onNavigate}
+                                        onReaction={onReaction}
+                                        onAddComment={onAddComment}
+                                        onDeletePost={onDeletePost}
+                                        onDeleteComment={onDeleteComment}
+                                        onCreateOrOpenConversation={onCreateOrOpenConversation}
+                                        onSharePostAsMessages={onSharePostAsMessages}
+                                        onSharePost={onSharePost}
+                                        onToggleSavePost={onToggleSavePost}
                                     />
                                 </div>
-                            </div>
-                            
-                            <div className="flex gap-3 mt-4 sm:mt-0 sm:mb-2 w-full sm:w-auto">
-                                {isOwnProfile ? (
-                                    <button onClick={() => setIsEditing(true)} className="flex-1 sm:flex-none py-2 px-6 rounded-full border border-border font-bold text-sm hover:bg-muted transition-colors bg-background">
-                                        Edit Profile
-                                    </button>
-                                ) : (
-                                    <button onClick={handleStartConversation} className="flex-1 sm:flex-none py-2 px-6 rounded-full bg-primary text-primary-foreground font-bold text-sm hover:bg-primary/90 transition-shadow shadow-md">
-                                        Message
-                                    </button>
-                                )}
-                            </div>
-                        </div>
-
-                        <div>
-                            <h1 className="text-2xl md:text-3xl font-black text-foreground flex flex-col sm:flex-row sm:items-center gap-2">
-                                {profileUser.name}
-                                <span className={`text-xs self-start sm:self-auto px-2 py-0.5 rounded-md font-bold uppercase tracking-wide border ${
-                                    profileUser.tag === 'Student' ? 'bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800' : 
-                                    'bg-blue-50 text-blue-700 border-blue-100 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800'
-                                }`}>
-                                    {profileUser.tag}
-                                </span>
-                            </h1>
-                            <p className="text-sm text-muted-foreground font-medium mt-1 flex items-center gap-1">
-                                <BriefcaseIcon className="w-3.5 h-3.5"/> {profileUser.department} 
-                                {profileUser.tag === 'Student' && <span>• Year {profileUser.yearOfStudy || 1}</span>}
-                            </p>
-                            
-                            {profileUser.bio && (
-                                <p className="mt-3 text-sm leading-relaxed max-w-2xl text-foreground/90">{profileUser.bio}</p>
                             )}
 
-                            <div className="flex gap-8 mt-8 border-t border-border pt-5 overflow-x-auto no-scrollbar pb-2">
-                                {/* Removed Attendance Stat Item */}
-                                <StatItem 
-                                    label="Clubs" 
-                                    value={userGroups.length} 
-                                    icon={UsersIcon} 
-                                    onClick={() => setActiveTab('about')}
-                                    active={activeTab === 'about'} 
-                                />
-                                <StatItem 
-                                    label="Posts" 
-                                    value={userPosts.length} 
-                                    icon={PostIcon} 
-                                    onClick={() => setActiveTab('posts')}
-                                    active={activeTab === 'posts'}
-                                />
-                                <StatItem 
-                                    label="Projects" 
-                                    value={userProjects.length} 
-                                    icon={CodeIcon} 
-                                    onClick={() => setActiveTab('projects')}
-                                    active={activeTab === 'projects'}
-                                />
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="flex px-4 md:px-8 border-t border-border gap-6 overflow-x-auto no-scrollbar">
-                        {[
-                            { id: 'posts', label: 'Posts' },
-                            { id: 'about', label: 'About' },
-                            { id: 'projects', label: 'Projects' },
-                            ...(isOwnProfile ? [{ id: 'saved', label: 'Saved' }] : [])
-                        ].map((tab) => (
-                            <button
-                                key={tab.id}
-                                onClick={() => setActiveTab(tab.id as any)}
-                                className={`py-4 text-sm font-bold border-b-2 transition-colors whitespace-nowrap ${
-                                    activeTab === tab.id 
-                                    ? 'border-primary text-primary' 
-                                    : 'border-transparent text-muted-foreground hover:text-foreground'
-                                }`}
-                            >
-                                {tab.label}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-
-                <div className="px-2 md:px-0 min-h-[300px]">
-                    {activeTab === 'posts' && (
-                        <div className="animate-fade-in">
-                            {isOwnProfile && (
-                                <div className="mb-6">
-                                    <InlineCreatePost user={currentUser} onOpenCreateModal={handleCreateClick} />
-                                </div>
-                            )}
-                            <Feed 
-                                key={profileUser.id}
-                                posts={userPosts} 
-                                users={users} 
-                                currentUser={currentUser} 
-                                groups={groups}
-                                onNavigate={onNavigate}
-                                onReaction={onReaction}
-                                onAddComment={onAddComment}
-                                onDeletePost={onDeletePost}
-                                onDeleteComment={onDeleteComment}
-                                onCreateOrOpenConversation={onCreateOrOpenConversation}
-                                onSharePostAsMessages={onSharePostAsMessages}
-                                onSharePost={onSharePost}
-                                onToggleSavePost={onToggleSavePost}
-                            />
-                        </div>
-                    )}
-
-                    {activeTab === 'about' && (
-                        <div className="animate-fade-in space-y-6">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="bg-card p-5 rounded-2xl border border-border shadow-sm">
-                                    <div className="flex justify-between items-center mb-4">
-                                        <h3 className="font-bold text-foreground flex items-center gap-2">
-                                            <StarIcon className="w-5 h-5 text-amber-500"/> Interests
-                                        </h3>
-                                        {isOwnProfile && (
-                                            <form onSubmit={handleAddInterestSubmit} className="flex">
-                                                <input 
-                                                    type="text" 
-                                                    value={newInterest} 
-                                                    onChange={e => setNewInterest(e.target.value)} 
-                                                    placeholder="Add..." 
-                                                    className="bg-muted/50 border-none rounded-l-lg px-3 py-1 text-xs w-24 focus:w-32 focus:ring-0 transition-all"
-                                                />
-                                                <button type="submit" className="bg-muted hover:bg-primary hover:text-primary-foreground px-2 rounded-r-lg text-xs font-bold transition-colors">+</button>
-                                            </form>
-                                        )}
-                                    </div>
-                                    <div className="flex flex-wrap gap-2">
-                                        {profileUser.interests?.map((interest, i) => (
-                                            <span key={i} className="px-3 py-1.5 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 rounded-lg text-xs font-bold border border-amber-100 dark:border-amber-800/50">
-                                                {interest}
-                                            </span>
-                                        ))}
-                                        {(!profileUser.interests || profileUser.interests.length === 0) && <p className="text-sm text-muted-foreground italic">No interests added.</p>}
-                                    </div>
-                                </div>
-
-                                <div className="bg-card p-5 rounded-2xl border border-border shadow-sm">
-                                    <h3 className="font-bold text-foreground mb-4 flex items-center gap-2">
-                                        <UsersIcon className="w-5 h-5 text-blue-500"/> Joined Clubs
-                                    </h3>
-                                    <div className="flex flex-col gap-3">
-                                        {userGroups.length > 0 ? userGroups.map(group => (
-                                            <div key={group.id} onClick={() => onNavigate(`#/groups/${group.id}`)} className="flex items-center gap-3 p-2 hover:bg-muted/30 rounded-xl cursor-pointer transition-colors border border-transparent hover:border-border/50">
-                                                <img src={group.imageUrl || 'https://via.placeholder.com/40'} alt={group.name} className="w-10 h-10 rounded-lg object-cover bg-muted" />
-                                                <div className="min-w-0">
-                                                    <p className="font-bold text-sm text-foreground truncate">{group.name}</p>
-                                                    <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wide">{group.category}</p>
-                                                </div>
+                            {activeTab === 'about' && (
+                                <div className="animate-fade-in space-y-6">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div className="bg-card p-6 rounded-[2rem] border border-border/60 shadow-sm">
+                                            <div className="flex justify-between items-center mb-6">
+                                                <h3 className="text-[10px] font-black uppercase text-muted-foreground tracking-[0.2em] flex items-center gap-2">
+                                                    <StarIcon className="w-4 h-4 text-amber-500"/> Interests
+                                                </h3>
+                                                {isOwnProfile && (
+                                                    <form onSubmit={handleAddInterestSubmit} className="flex">
+                                                        <input
+                                                            type="text"
+                                                            value={newInterest}
+                                                            onChange={e => setNewInterest(e.target.value)}
+                                                            placeholder="Add..."
+                                                            className="bg-muted/30 border border-border/50 rounded-l-xl px-3 py-1.5 text-[10px] font-bold w-20 focus:w-28 transition-all outline-none"
+                                                        />
+                                                        <button type="submit" className="bg-primary text-white px-3 rounded-r-xl text-xs font-black transition-colors shadow-lg shadow-primary/10">+</button>
+                                                    </form>
+                                                )}
                                             </div>
-                                        )) : (
-                                            <p className="text-sm text-muted-foreground italic">Not a member of any clubs yet.</p>
-                                        )}
-                                    </div>
-                                </div>
-
-                                {(isOwnProfile || isFacultyView) && profileUser.tag === 'Student' && (
-                                    <div className="bg-card p-5 rounded-2xl border border-border shadow-sm">
-                                        <h3 className="font-bold text-foreground mb-4 flex items-center gap-2">
-                                            <ChartBarIcon className="w-5 h-5 text-emerald-500"/> Academic Overview
-                                        </h3>
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div className="bg-muted/30 p-3 rounded-xl border border-border/50">
-                                                <p className="text-xs font-bold text-muted-foreground uppercase">Attendance</p>
-                                                <p className="text-xl font-black text-foreground mt-1">{academicStats?.attendance}%</p>
-                                            </div>
-                                            <div className="bg-muted/30 p-3 rounded-xl border border-border/50">
-                                                <p className="text-xs font-bold text-muted-foreground uppercase">Assignments</p>
-                                                <p className="text-xl font-black text-foreground mt-1">{academicStats?.assignments}</p>
+                                            <div className="flex flex-wrap gap-2">
+                                                {profileUser.interests?.map((interest, i) => (
+                                                    <span key={i} className="px-3 py-1.5 bg-muted/40 text-foreground rounded-xl text-[10px] font-bold border border-border/50 transition-colors hover:border-primary/30">
+                                                        {interest}
+                                                    </span>
+                                                ))}
+                                                {(!profileUser.interests || profileUser.interests.length === 0) && <p className="text-[10px] text-muted-foreground font-black uppercase opacity-50 italic">No interests added.</p>}
                                             </div>
                                         </div>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    )}
 
-                    {activeTab === 'projects' && (
-                        <div className="animate-fade-in">
-                            {userProjects.length > 0 ? (
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    {userProjects.map(proj => (
-                                        <ProjectCard 
-                                            key={proj.id} 
-                                            project={proj} 
-                                            author={profileUser}
-                                            currentUser={currentUser}
-                                            onDeleteProject={onDeletePost}
-                                        />
-                                    ))}
+                                        <div className="bg-card p-6 rounded-[2rem] border border-border/60 shadow-sm">
+                                            <h3 className="text-[10px] font-black uppercase text-muted-foreground tracking-[0.2em] mb-6 flex items-center gap-2">
+                                                <UsersIcon className="w-4 h-4 text-blue-500"/> Joined Clubs
+                                            </h3>
+                                            <div className="flex flex-col gap-3">
+                                                {userGroups.length > 0 ? userGroups.map(group => (
+                                                    <div key={group.id} onClick={() => onNavigate(`#/groups/${group.id}`)} className="flex items-center gap-3 p-2.5 hover:bg-muted/40 rounded-2xl cursor-pointer transition-all group/item border border-transparent hover:border-border/50">
+                                                        <img src={group.imageUrl || 'https://via.placeholder.com/40'} alt={group.name} className="w-10 h-10 rounded-xl object-cover bg-muted shadow-sm group-hover/item:scale-105 transition-transform" />
+                                                        <div className="min-w-0">
+                                                            <p className="font-black text-[11px] text-foreground truncate group-hover/item:text-primary transition-colors">{group.name}</p>
+                                                            <p className="text-[9px] text-muted-foreground uppercase font-black tracking-widest">{group.category}</p>
+                                                        </div>
+                                                    </div>
+                                                )) : (
+                                                    <p className="text-[10px] text-muted-foreground font-black uppercase opacity-50 italic">Not a member of any clubs yet.</p>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {(isOwnProfile || isFacultyView) && profileUser.tag === 'Student' && (
+                                            <div className="bg-card p-6 rounded-[2rem] border border-border/60 shadow-sm md:col-span-2">
+                                                <h3 className="text-[10px] font-black uppercase text-muted-foreground tracking-[0.2em] mb-6 flex items-center gap-2">
+                                                    <ChartBarIcon className="w-4 h-4 text-emerald-500"/> Academic Performance
+                                                </h3>
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div className="bg-muted/20 p-5 rounded-2xl border border-border/50 group/stat hover:border-primary/30 transition-all">
+                                                        <p className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-2 group-hover:text-primary transition-colors">Total Attendance</p>
+                                                        <p className="text-3xl font-black text-foreground tracking-tighter">{academicStats?.attendance}%</p>
+                                                    </div>
+                                                    <div className="bg-muted/20 p-5 rounded-2xl border border-border/50 group/stat hover:border-secondary/30 transition-all">
+                                                        <p className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-2 group-hover:text-secondary transition-colors">Active Assignments</p>
+                                                        <p className="text-3xl font-black text-foreground tracking-tighter">{academicStats?.assignments}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
-                            ) : (
-                                <div className="text-center py-16 bg-card rounded-2xl border border-border border-dashed">
-                                    <CodeIcon className="w-12 h-12 mx-auto mb-3 text-muted-foreground/30"/>
-                                    <p className="text-muted-foreground font-medium">No projects showcased yet.</p>
+                            )}
+
+                            {activeTab === 'projects' && (
+                                <div className="animate-fade-in">
+                                    {userProjects.length > 0 ? (
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            {userProjects.map(proj => (
+                                                <ProjectCard
+                                                    key={proj.id}
+                                                    project={proj}
+                                                    author={profileUser}
+                                                    currentUser={currentUser}
+                                                    onDeleteProject={onDeletePost}
+                                                />
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <div className="text-center py-24 bg-card rounded-[2.5rem] border border-border border-dashed opacity-50">
+                                            <CodeIcon className="w-12 h-12 mx-auto mb-4 text-muted-foreground/30"/>
+                                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">No projects showcased yet</p>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {activeTab === 'saved' && (
+                                <div className="animate-fade-in space-y-6">
+                                     <Feed
+                                        posts={savedPosts}
+                                        users={users}
+                                        currentUser={currentUser}
+                                        groups={groups}
+                                        onNavigate={onNavigate}
+                                        onReaction={onReaction}
+                                        onAddComment={onAddComment}
+                                        onDeletePost={onDeletePost}
+                                        onDeleteComment={onDeleteComment}
+                                        onCreateOrOpenConversation={onCreateOrOpenConversation}
+                                        onSharePostAsMessages={onSharePostAsMessages}
+                                        onSharePost={onSharePost}
+                                        onToggleSavePost={onToggleSavePost}
+                                    />
+                                    {savedPosts.length === 0 && (
+                                        <div className="text-center py-24 bg-card rounded-[2.5rem] border border-border border-dashed opacity-50">
+                                            <BookmarkIcon className="w-12 h-12 mx-auto mb-4 text-muted-foreground/30"/>
+                                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">No saved posts found</p>
+                                        </div>
+                                    )}
                                 </div>
                             )}
                         </div>
-                    )}
+                    </div>
+
+                    {/* Right Sidebar: Insights & Trending */}
+                    <div className="lg:col-span-3 hidden lg:block sticky top-24 space-y-6">
+                        <div className="bg-card rounded-[2rem] border border-border/60 p-6 shadow-sm overflow-hidden relative">
+                            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 to-teal-500"></div>
+                            <h3 className="text-[10px] font-black uppercase text-muted-foreground tracking-[0.2em] mb-6 flex items-center gap-2">
+                                <ChartBarIcon className="w-4 h-4 text-emerald-500"/> Profile Insights
+                            </h3>
+                            <div className="space-y-6">
+                                <div>
+                                    <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-1">Search Appearances</p>
+                                    <div className="flex items-baseline justify-between">
+                                        <span className="text-2xl font-black text-foreground">1,420</span>
+                                        <span className="text-[9px] font-black text-emerald-500">+12%</span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-1">Project Views</p>
+                                    <div className="flex items-baseline justify-between">
+                                        <span className="text-2xl font-black text-foreground">854</span>
+                                        <span className="text-[9px] font-black text-emerald-500">+5%</span>
+                                    </div>
+                                </div>
+                                <button className="w-full py-2.5 rounded-xl bg-muted/30 hover:bg-muted text-[9px] font-black uppercase tracking-widest transition-all">View Detailed Analytics</button>
+                            </div>
+                        </div>
+
+                        <div className="bg-card rounded-[2rem] border border-border/60 p-6 shadow-sm">
+                            <h3 className="text-[10px] font-black uppercase text-muted-foreground tracking-[0.2em] mb-6 flex items-center gap-2">
+                                <SparkleIcon className="w-4 h-4 text-primary"/> Trending Projects
+                            </h3>
+                            <div className="space-y-4">
+                                {[
+                                    { title: 'Lumine OS Redesign', views: '2.4k', rank: 1 },
+                                    { title: 'Neon Synth Concept', views: '1.1k', rank: 2 },
+                                    { title: 'Fluid Systems', views: '940', rank: 3 }
+                                ].map((proj, idx) => (
+                                    <div key={idx} className="flex items-center gap-3 group cursor-pointer">
+                                        <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center font-black text-xs text-muted-foreground group-hover:bg-primary group-hover:text-primary-foreground transition-all">
+                                            {proj.rank}
+                                        </div>
+                                        <div className="min-w-0">
+                                            <p className="text-[11px] font-black text-foreground truncate group-hover:text-primary transition-colors">{proj.title}</p>
+                                            <p className="text-[9px] text-muted-foreground uppercase font-bold">{proj.views} views</p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="px-6 space-y-4 pt-4 text-center">
+                            <div className="flex flex-wrap justify-center gap-x-4 gap-y-2 text-[9px] font-black text-muted-foreground/30 uppercase tracking-widest">
+                                <a href="#" className="hover:text-primary transition-colors">Privacy</a>
+                                <a href="#" className="hover:text-primary transition-colors">Terms</a>
+                                <a href="#" className="hover:text-primary transition-colors">Help</a>
+                            </div>
+                            <p className="text-[9px] font-black text-muted-foreground/20 uppercase tracking-[0.3em]">
+                                &copy; 2025 LUMINA SOCIAL INC.
+                            </p>
+                        </div>
+                    </div>
                 </div>
             </main>
 

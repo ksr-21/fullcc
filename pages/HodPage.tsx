@@ -463,7 +463,8 @@ const UserDirectory = ({
     onUpdateUser,
     availableYears,
     existingEmails = [],
-    activeClasses = []
+    activeClasses = [],
+    currentUser // Added currentUser
 }: { 
     users?: User[], 
     type: 'Student' | 'Teacher', 
@@ -476,6 +477,7 @@ const UserDirectory = ({
     availableYears?: number[];
     existingEmails?: string[];
     activeClasses?: { year: number, division: string }[];
+    currentUser: User;
 }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [isSingleModalOpen, setIsSingleModalOpen] = useState(false);
@@ -560,7 +562,7 @@ const UserDirectory = ({
         let total = 0, present = 0;
         activeCourses.forEach(course => {
             course.attendanceRecords?.forEach(r => {
-                if (r.records?.[studentId]) {
+                if (r.records && r.records[studentId]) {
                     total++;
                     if (r.records[studentId].status === 'present') present++;
                 }
@@ -681,13 +683,16 @@ const UserDirectory = ({
                                                 </td>
                                                 <td className="p-4 text-right">
                                                     <div className="flex items-center justify-end gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-                                                        <button 
-                                                            onClick={() => setEditingUser(user)}
-                                                            className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
-                                                            title="Edit User"
-                                                        >
-                                                            <EditIcon className="w-4 h-4"/>
-                                                        </button>
+                                                        {/* HOD cannot edit names of Director, Super Admin, or themselves */}
+                                                        {!(user.tag === 'Director' || user.tag === 'Super Admin' || user.id === currentUser.id) && (
+                                                            <button
+                                                                onClick={() => setEditingUser(user)}
+                                                                className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+                                                                title="Edit User"
+                                                            >
+                                                                <EditIcon className="w-4 h-4"/>
+                                                            </button>
+                                                        )}
                                                         <button 
                                                             onClick={() => handleDelete(user.id)} 
                                                             className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
@@ -1837,7 +1842,7 @@ const HodPage: React.FC<HodPageProps> = (props) => {
                             onSaveAll={() => { /* Auto saved via updates */ }}
                         />
                     )}
-                    {activeSection === 'faculty' && <UserDirectory type="Teacher" users={deptFaculty} onCreateUser={handleCreateUser} onCreateUsersBatch={handleBatchUpload} department={department} activeCourses={deptCourses} onDeleteUser={onDeleteUser} onUpdateUser={onUpdateUser} existingEmails={allUserEmails} />}
+                    {activeSection === 'faculty' && <UserDirectory type="Teacher" users={deptFaculty} onCreateUser={handleCreateUser} onCreateUsersBatch={handleBatchUpload} department={department} activeCourses={deptCourses} onDeleteUser={onDeleteUser} onUpdateUser={onUpdateUser} existingEmails={allUserEmails} currentUser={currentUser} />}
                     {activeSection === 'students' && (
                         <UserDirectory 
                             availableYears={activeYears} 
@@ -1851,6 +1856,7 @@ const HodPage: React.FC<HodPageProps> = (props) => {
                             onDeleteUser={onDeleteUser} 
                             onUpdateUser={onUpdateUser} 
                             existingEmails={allUserEmails} 
+                            currentUser={currentUser}
                         />
                     )}
                     {activeSection === 'at-risk' && (
