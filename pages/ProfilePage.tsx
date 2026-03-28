@@ -106,6 +106,29 @@ const ProfilePage: React.FC<ProfilePageProps> = (props) => {
     }, [posts, profileUser]);
 
     const userProjects = useMemo(() => posts.filter(p => p.authorId === profileUser?.id && p.isProject).sort((a, b) => b.timestamp - a.timestamp), [posts, profileUser]);
+
+    const profileInsights = useMemo(() => {
+        if (!profileUser) return { reactions: 0, projects: 0 };
+        const totalReactions = userPosts.reduce((acc, p) => {
+            const count = Object.values(p.reactions || {}).reduce((sum, uids) => sum + (uids?.length || 0), 0);
+            return acc + count;
+        }, 0);
+        return {
+            reactions: totalReactions,
+            projects: userProjects.length
+        };
+    }, [profileUser, userPosts, userProjects]);
+
+    const trendingProjects = useMemo(() => {
+        return posts
+            .filter(p => p.isProject)
+            .map(p => {
+                const reactionCount = Object.values(p.reactions || {}).reduce((sum, uids) => sum + (uids?.length || 0), 0);
+                return { ...p, reactionCount };
+            })
+            .sort((a, b) => b.reactionCount - a.reactionCount)
+            .slice(0, 3);
+    }, [posts]);
     
     // Corrected logic to find groups user is part of
     const userGroups = useMemo(() => {
@@ -230,10 +253,6 @@ const ProfilePage: React.FC<ProfilePageProps> = (props) => {
                         <div className="h-px bg-gradient-to-r from-transparent via-border/50 to-transparent mx-6"></div>
 
                         <div className="space-y-1">
-                            <button className="w-full flex items-center gap-4 px-6 py-4 rounded-2xl text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-all group">
-                                <PlusIcon className="w-5 h-5 opacity-50 group-hover:opacity-100 transition-opacity" />
-                                <span className="text-[11px] font-black uppercase tracking-[0.2em]">Settings</span>
-                            </button>
                             <button onClick={handleLogout} className="w-full flex items-center gap-4 px-6 py-4 rounded-2xl text-muted-foreground hover:bg-rose-500/10 hover:text-rose-500 transition-all group">
                                 <ArrowLeftIcon className="w-5 h-5 opacity-50 group-hover:opacity-100 transition-opacity rotate-180" />
                                 <span className="text-[11px] font-black uppercase tracking-[0.2em]">Logout</span>
@@ -264,9 +283,15 @@ const ProfilePage: React.FC<ProfilePageProps> = (props) => {
                                     <h1 className="text-3xl md:text-4xl font-black text-foreground tracking-tight leading-none mb-1">
                                         {profileUser.name}
                                     </h1>
-                                    <p className="text-xs font-black text-primary uppercase tracking-[0.2em] mb-6">
+                                    <p className="text-xs font-black text-primary uppercase tracking-[0.2em] mb-3">
                                         {profileUser.tag === 'Director' ? 'Director of Visual Systems' : `${profileUser.tag} • ${profileUser.department}`}
                                     </p>
+
+                                    {profileUser.bio && (
+                                        <p className="text-sm font-medium text-muted-foreground/80 max-w-md mb-6 line-clamp-2">
+                                            {profileUser.bio}
+                                        </p>
+                                    )}
 
                                     <div className="flex gap-8 mb-8">
                                         <StatItem label="Clubs" value={userGroups.length} />
@@ -467,20 +492,17 @@ const ProfilePage: React.FC<ProfilePageProps> = (props) => {
                             </h3>
                             <div className="space-y-6">
                                 <div>
-                                    <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-1">Search Appearances</p>
+                                    <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-1">Total Reactions</p>
                                     <div className="flex items-baseline justify-between">
-                                        <span className="text-2xl font-black text-foreground">1,420</span>
-                                        <span className="text-[9px] font-black text-emerald-500">+12%</span>
+                                        <span className="text-2xl font-black text-foreground">{profileInsights.reactions.toLocaleString()}</span>
                                     </div>
                                 </div>
                                 <div>
-                                    <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-1">Project Views</p>
+                                    <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-1">Project Contributions</p>
                                     <div className="flex items-baseline justify-between">
-                                        <span className="text-2xl font-black text-foreground">854</span>
-                                        <span className="text-[9px] font-black text-emerald-500">+5%</span>
+                                        <span className="text-2xl font-black text-foreground">{profileInsights.projects}</span>
                                     </div>
                                 </div>
-                                <button className="w-full py-2.5 rounded-xl bg-muted/30 hover:bg-muted text-[9px] font-black uppercase tracking-widest transition-all">View Detailed Analytics</button>
                             </div>
                         </div>
 
@@ -489,21 +511,19 @@ const ProfilePage: React.FC<ProfilePageProps> = (props) => {
                                 <SparkleIcon className="w-4 h-4 text-primary"/> Trending Projects
                             </h3>
                             <div className="space-y-4">
-                                {[
-                                    { title: 'Lumine OS Redesign', views: '2.4k', rank: 1 },
-                                    { title: 'Neon Synth Concept', views: '1.1k', rank: 2 },
-                                    { title: 'Fluid Systems', views: '940', rank: 3 }
-                                ].map((proj, idx) => (
-                                    <div key={idx} className="flex items-center gap-3 group cursor-pointer">
+                                {trendingProjects.length > 0 ? trendingProjects.map((proj, idx) => (
+                                    <div key={proj.id} onClick={() => onNavigate(`#/profile/${proj.authorId}`)} className="flex items-center gap-3 group cursor-pointer">
                                         <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center font-black text-xs text-muted-foreground group-hover:bg-primary group-hover:text-primary-foreground transition-all">
-                                            {proj.rank}
+                                            {idx + 1}
                                         </div>
                                         <div className="min-w-0">
-                                            <p className="text-[11px] font-black text-foreground truncate group-hover:text-primary transition-colors">{proj.title}</p>
-                                            <p className="text-[9px] text-muted-foreground uppercase font-bold">{proj.views} views</p>
+                                            <p className="text-[11px] font-black text-foreground truncate group-hover:text-primary transition-colors">{proj.projectDetails?.title || 'Untitled Project'}</p>
+                                            <p className="text-[9px] text-muted-foreground uppercase font-bold">{proj.reactionCount} reactions</p>
                                         </div>
                                     </div>
-                                ))}
+                                )) : (
+                                    <p className="text-[10px] text-muted-foreground font-black uppercase opacity-50 italic">No trending projects found.</p>
+                                )}
                             </div>
                         </div>
 
