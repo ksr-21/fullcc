@@ -20,7 +20,7 @@ import { auth } from '../api';
 import { 
     PostIcon, UsersIcon, StarIcon, BookmarkIcon, ArrowLeftIcon, 
     PlusIcon, BriefcaseIcon, CodeIcon, TrophyIcon, CheckCircleIcon,
-    ChartBarIcon, ShieldIcon
+    ChartBarIcon, ShieldIcon, SparkleIcon
 } from '../components/Icons';
 
 interface ProfilePageProps {

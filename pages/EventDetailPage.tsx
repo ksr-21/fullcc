@@ -8,7 +8,7 @@ import {
     CalendarIcon, MapPinIcon, ClockIcon, ArrowLeftIcon, UsersIcon, 
     ShareIcon, CheckCircleIcon, PlusIcon, UserIcon 
 } from '../components/Icons';
-import { auth } from '../api';
+import { auth, db } from '../api';
 
 interface EventDetailPageProps {
     eventId: string;
