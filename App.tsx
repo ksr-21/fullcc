@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { auth, FieldValue, FieldPath, db, api, uploadToCloudinary } from './api';
+import { auth, FieldValue, FieldPath, db, api, uploadToCloudinary, storage } from './api';
 import { User, Post, Group, Story, Notice, Course, College, Conversation, UserTag, ReactionType } from './types';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
@@ -771,6 +771,8 @@ function App() {
           if (path.startsWith('#/profile/')) { const uid = path.split('/')[2]; return <ProfilePage profileUserId={uid} currentUser={activeUser} users={users} posts={posts} groups={groups} colleges={colleges} courses={courses} onNavigate={handleNavigate} currentPath={currentPath} onAddPost={(d) => handleCreate('posts', {...d, authorId: activeUser.id, collegeId: activeUser.collegeId, timestamp: Date.now()})} onAddAchievement={(a) => handleUpdate('users', activeUser.id, { achievements: FieldValue.arrayUnion(a) })} onAddInterest={(i) => handleUpdate('users', activeUser.id, { interests: FieldValue.arrayUnion(i) })} onUpdateProfile={async (d, f) => {
             if (!activeUser) return;
             let updateData: any = { ...d };
+            let uploadSuccess = true;
+
             if (f) {
                 try {
                     // Use the more robust storage ref from api.ts
@@ -779,16 +781,29 @@ function App() {
                     updateData.avatarUrl = avatarUrl;
                 } catch (err) {
                     console.error("Avatar upload failed", err);
+                    uploadSuccess = false;
                 }
             }
 
-            // Optimistic update
-            setRegisteredUsers(prev => ({
-                ...prev,
-                [activeUser.id]: { ...prev[activeUser.id], ...updateData }
-            }));
+            try {
+                // Optimistic update
+                setRegisteredUsers(prev => ({
+                    ...prev,
+                    [activeUser.id]: { ...prev[activeUser.id], ...updateData }
+                }));
+                setCurrentUser(prev => prev ? { ...prev, ...updateData } : null);
 
-            await handleUpdate('users', activeUser.id, updateData);
+                await handleUpdate('users', activeUser.id, updateData);
+
+                if (uploadSuccess) {
+                    alert("Profile updated successfully!");
+                } else {
+                    alert("Profile info updated, but image upload failed.");
+                }
+            } catch (err) {
+                console.error("Profile update failed", err);
+                alert("Failed to update profile. Please try again.");
+            }
           }} {...commonFeedProps} />; }
           
           if (path.startsWith('#/groups/')) { 

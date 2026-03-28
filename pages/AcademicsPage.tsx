@@ -10,7 +10,7 @@ import {
     ChartPieIcon, CalendarIcon,
     CheckIcon, AlertTriangleIcon, UsersIcon, MapPinIcon, CoffeeIcon, ActivityIcon, TrendingUpIcon, PhotoIcon, CheckCircleIcon,
     ClockIcon, ChevronRightIcon, FilterIcon, EditIcon, SearchIcon, MenuIcon, EyeIcon, DownloadIcon,
-    FileTextIcon, UploadIcon, SaveIcon, LayoutGridIcon, ListIcon, XCircleIcon, BeakerIcon
+    FileTextIcon, UploadIcon, SaveIcon, LayoutGridIcon, ListIcon, XCircleIcon, BeakerIcon, SparkleIcon
 } from '../components/Icons';
 import { TimetableManager } from '../components/AcademicManager';
 
@@ -1501,23 +1501,346 @@ const FacultyAcademicsDashboard: React.FC<AcademicsPageProps> = (props) => {
 };
 
 const StudentAcademicsDashboard: React.FC<AcademicsPageProps> = (props) => {
-    // Placeholder to match file structure, as student logic wasn't the focus of this fix
-    // but needs to exist for the component to compile.
     const { currentUser, onNavigate, courses, currentPath, notices, users, colleges } = props;
-    const [activeSection, setActiveSection] = useState('dashboard');
-    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-    
+    const [activeTab, setActiveTab] = useState<'feed' | 'timetable' | 'courses'>('feed');
+
+    const college = useMemo(() => colleges.find(c => c.id === currentUser.collegeId), [colleges, currentUser.collegeId]);
+
+    const myCourses = useMemo(() => {
+        return courses.filter(c =>
+            c.department === currentUser.department &&
+            Number(c.year) === Number(currentUser.yearOfStudy) &&
+            (!c.division || c.division === currentUser.division)
+        );
+    }, [courses, currentUser]);
+
+    const academicFeed = useMemo(() => {
+        const feedItems: any[] = [];
+
+        // Add Notices
+        notices.forEach(n => {
+            const isForMyDept = n.targetDept === currentUser.department || n.targetDept === 'All' || !n.targetDept;
+            const isGlobal = n.collegeId === currentUser.collegeId;
+            let isTargeted = false;
+
+            if (n.targetAudience === 'Student' || !n.targetAudience) {
+                if ((!n.targetYear || n.targetYear === currentUser.yearOfStudy) &&
+                    (!n.targetDiv || n.targetDiv === currentUser.division)) {
+                    isTargeted = true;
+                }
+            }
+
+            if ((isForMyDept || isGlobal) && isTargeted) {
+                feedItems.push({ type: 'notice', data: n, timestamp: new Date(n.timestamp).getTime() });
+            }
+        });
+
+        // Add Assignments
+        myCourses.forEach(c => {
+            c.assignments?.forEach(a => {
+                feedItems.push({ type: 'assignment', data: a, course: c, timestamp: a.postedAt });
+            });
+        });
+
+        return feedItems.sort((a, b) => b.timestamp - a.timestamp);
+    }, [notices, myCourses, currentUser]);
+
+    const attendanceStats = useMemo(() => {
+        let totalClasses = 0;
+        let presentClasses = 0;
+        myCourses.forEach(c => {
+            c.attendanceRecords?.forEach(r => {
+                if (r.records[currentUser.id]) {
+                    totalClasses++;
+                    if (r.records[currentUser.id].status === 'present') presentClasses++;
+                }
+            });
+        });
+        return totalClasses > 0 ? Math.round((presentClasses / totalClasses) * 100) : 0;
+    }, [myCourses, currentUser.id]);
+
+    const todaysClasses = useMemo(() => {
+        if (!college?.timetable) return [];
+        const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        const todayName = days[new Date().getDay()];
+        const classId = `${currentUser.yearOfStudy}-${currentUser.division}`;
+        const daySchedule = college.timetable[classId]?.[todayName];
+        if (!daySchedule) return [];
+
+        const slots = getSlotsForClass(college, classId);
+        return slots.map(slot => {
+            const cell = daySchedule[slot.id];
+            if (!cell) return null;
+
+            let subjectLabel = '';
+            if (cell.type === 'practical' && cell.batches) {
+                subjectLabel = cell.batches.map(b => courses.find(c => c.id === b.subjectId)?.subject).filter(Boolean).join(' / ') + ' Practical';
+            } else {
+                const subjectIds = getCellSubjectIds(cell);
+                subjectLabel = subjectIds.map(id => courses.find(c => c.id === id)?.subject).filter(Boolean).join(' / ');
+            }
+
+            return {
+                time: formatSlotLabel(slot.label),
+                subject: subjectLabel,
+                room: cell.roomId || (cell.type === 'practical' ? cell.batches?.[0]?.roomId : '') || 'TBA',
+                type: cell.type || 'lecture'
+            };
+        }).filter(Boolean);
+    }, [college, currentUser, courses]);
+
     return (
-        <div className="flex flex-col h-screen bg-background overflow-hidden">
-             <Header currentUser={currentUser} onLogout={() => auth.signOut()} onNavigate={onNavigate} currentPath={currentPath} />
-             <div className="flex flex-1 overflow-hidden relative">
-                <div className="p-10 w-full overflow-y-auto">
-                    <h2 className="text-3xl font-bold mb-4">Student Dashboard</h2>
-                    <StudentTimetableView college={colleges.find(c => c.id === currentUser.collegeId)} currentUser={currentUser} courses={courses} users={users} />
-                    {/* Add other student sections here */}
+        <div className="bg-background min-h-screen pb-20 lg:pb-0">
+            <Header currentUser={currentUser} onLogout={() => auth.signOut()} onNavigate={onNavigate} currentPath={currentPath} />
+
+            <main className="container mx-auto px-4 py-6 lg:px-8">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+
+                    {/* Left Sidebar: Student Profile & Stats */}
+                    <div className="lg:col-span-3 space-y-6 sticky top-24 hidden lg:block">
+                        <div className="bg-card rounded-[2rem] border border-border/60 p-6 shadow-xl overflow-hidden relative group">
+                            <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-primary to-cyan-400"></div>
+                            <div className="flex flex-col items-center text-center">
+                                <Avatar src={currentUser.avatarUrl} name={currentUser.name} size="xl" className="mb-4 ring-4 ring-background shadow-2xl" />
+                                <h2 className="text-xl font-black text-foreground">{currentUser.name}</h2>
+                                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-1">Year {currentUser.yearOfStudy} • Div {currentUser.division}</p>
+                                <p className="text-[11px] font-bold text-primary mt-2">{currentUser.department}</p>
+                            </div>
+
+                            <div className="mt-8 space-y-4">
+                                <div className="p-4 bg-muted/30 rounded-2xl border border-border/50">
+                                    <div className="flex justify-between items-end mb-1">
+                                        <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Attendance</span>
+                                        <span className="text-lg font-black text-foreground">{attendanceStats}%</span>
+                                    </div>
+                                    <div className="w-full h-1.5 bg-background rounded-full overflow-hidden">
+                                        <div className="h-full bg-primary transition-all duration-1000" style={{ width: `${attendanceStats}%` }}></div>
+                                    </div>
+                                </div>
+                                <div className="p-4 bg-muted/30 rounded-2xl border border-border/50">
+                                    <div className="flex justify-between items-end">
+                                        <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Courses</span>
+                                        <span className="text-lg font-black text-foreground">{myCourses.length}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="space-y-1">
+                            <button onClick={() => setActiveTab('feed')} className={`w-full flex items-center gap-4 px-6 py-4 rounded-2xl transition-all ${activeTab === 'feed' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}>
+                                <LayoutGridIcon className="w-5 h-5" />
+                                <span className="text-[11px] font-black uppercase tracking-widest">Academic Feed</span>
+                            </button>
+                            <button onClick={() => setActiveTab('timetable')} className={`w-full flex items-center gap-4 px-6 py-4 rounded-2xl transition-all ${activeTab === 'timetable' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}>
+                                <CalendarIcon className="w-5 h-5" />
+                                <span className="text-[11px] font-black uppercase tracking-widest">Timetable</span>
+                            </button>
+                            <button onClick={() => setActiveTab('courses')} className={`w-full flex items-center gap-4 px-6 py-4 rounded-2xl transition-all ${activeTab === 'courses' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}>
+                                <BookOpenIcon className="w-5 h-5" />
+                                <span className="text-[11px] font-black uppercase tracking-widest">My Courses</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Mobile Navigation Tabs */}
+                    <div className="lg:hidden flex bg-card rounded-2xl border border-border p-1 mb-6">
+                        {['feed', 'timetable', 'courses'].map((tab) => (
+                            <button
+                                key={tab}
+                                onClick={() => setActiveTab(tab as any)}
+                                className={`flex-1 py-3 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                                    activeTab === tab
+                                    ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20'
+                                    : 'text-muted-foreground hover:text-foreground'
+                                }`}
+                            >
+                                {tab}
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* Center Column: Feed Content */}
+                    <div className="lg:col-span-6 space-y-6">
+                        {activeTab === 'feed' && (
+                            <div className="space-y-6 animate-fade-in">
+                                {academicFeed.length > 0 ? academicFeed.map((item, idx) => (
+                                    <div key={idx} className="bg-card rounded-[2rem] border border-border/60 shadow-lg overflow-hidden group">
+                                        <div className="p-6">
+                                            <div className="flex justify-between items-start mb-4">
+                                                <div className="flex items-center gap-3">
+                                                    <div className={`p-2.5 rounded-xl ${item.type === 'notice' ? 'bg-indigo-500/10 text-indigo-500' : 'bg-emerald-500/10 text-emerald-500'}`}>
+                                                        {item.type === 'notice' ? <MegaphoneIcon className="w-5 h-5"/> : <ClipboardListIcon className="w-5 h-5"/>}
+                                                    </div>
+                                                    <div>
+                                                        <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{item.type === 'notice' ? 'Announcement' : 'New Assignment'}</h3>
+                                                        <p className="text-[11px] font-bold text-foreground opacity-60">{new Date(item.timestamp).toLocaleDateString()} • {new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                                                    </div>
+                                                </div>
+                                                {item.type === 'assignment' && (
+                                                    <div className="bg-rose-500/10 text-rose-500 px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border border-rose-500/20">
+                                                        Due: {new Date(item.data.dueDate).toLocaleDateString()}
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            <h2 className="text-xl font-black text-foreground mb-3 tracking-tight group-hover:text-primary transition-colors">
+                                                {item.data.title}
+                                            </h2>
+
+                                            {item.type === 'notice' ? (
+                                                <div className="text-sm text-muted-foreground leading-relaxed line-clamp-3 mb-4" dangerouslySetInnerHTML={{ __html: item.data.content }}></div>
+                                            ) : (
+                                                <div className="text-sm text-muted-foreground mb-4">
+                                                    Course: <span className="font-bold text-foreground">{item.course.subject}</span>
+                                                    <p className="mt-2 line-clamp-2">{item.data.description}</p>
+                                                </div>
+                                            )}
+
+                                            {(item.data.mediaUrl || item.data.imageUrl || item.data.fileUrl) && (
+                                                <div className="mt-4 rounded-2xl overflow-hidden border border-border/50 bg-muted/20">
+                                                    {(item.data.mediaUrl || item.data.imageUrl) && (
+                                                        <img src={item.data.mediaUrl || item.data.imageUrl} className="w-full h-48 object-cover" alt="Feed media" />
+                                                    )}
+                                                    {item.data.fileUrl && (
+                                                        <div className="p-4 flex items-center justify-between">
+                                                            <div className="flex items-center gap-3">
+                                                                <FileTextIcon className="w-6 h-6 text-primary"/>
+                                                                <span className="text-xs font-bold text-foreground truncate max-w-[200px]">{item.data.fileName}</span>
+                                                            </div>
+                                                            <a href={item.data.fileUrl} target="_blank" rel="noreferrer" className="p-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-all">
+                                                                <DownloadIcon className="w-4 h-4"/>
+                                                            </a>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
+
+                                            <div className="mt-6 pt-4 border-t border-border/50 flex justify-between items-center">
+                                                <div className="flex -space-x-2">
+                                                    {/* Avatars of related people could go here */}
+                                                    <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-[10px] font-black text-primary border-2 border-card uppercase">
+                                                        {item.type === 'notice' ? 'Adm' : 'Fac'}
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    onClick={() => item.type === 'assignment' ? onNavigate(`#/academics/${item.course.id}/tasks`) : onNavigate('#/notifications')}
+                                                    className="text-[10px] font-black uppercase tracking-widest text-primary hover:underline flex items-center gap-1.5"
+                                                >
+                                                    View Details <ChevronRightIcon className="w-3.5 h-3.5"/>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )) : (
+                                    <div className="text-center py-20 bg-card rounded-[2rem] border border-border/60 opacity-50">
+                                        <MegaphoneIcon className="w-12 h-12 mx-auto mb-4 text-muted-foreground/30"/>
+                                        <p className="text-[10px] font-black uppercase tracking-widest">No recent academic updates</p>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {activeTab === 'timetable' && (
+                            <div className="animate-fade-in">
+                                <StudentTimetableView college={college} currentUser={currentUser} courses={courses} users={users} />
+                            </div>
+                        )}
+
+                        {activeTab === 'courses' && (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 animate-fade-in">
+                                {myCourses.map(course => (
+                                    <div
+                                        key={course.id}
+                                        onClick={() => onNavigate(`#/academics/${course.id}`)}
+                                        className="bg-card border border-border/60 rounded-2xl p-5 hover:shadow-xl hover:border-primary/50 transition-all cursor-pointer group relative overflow-hidden"
+                                    >
+                                        <div className="absolute top-0 right-0 p-8 opacity-[0.03] pointer-events-none group-hover:opacity-[0.08] transition-opacity">
+                                            <BookOpenIcon className="w-20 h-20" />
+                                        </div>
+                                        <div className="h-10 w-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                            <BookOpenIcon className="w-5 h-5"/>
+                                        </div>
+                                        <h3 className="text-lg font-black text-foreground mb-1 group-hover:text-primary transition-colors line-clamp-1">{course.subject}</h3>
+                                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-wider">{course.department}</p>
+                                        <div className="mt-4 pt-4 border-t border-border/50 flex items-center justify-between">
+                                            <span className="text-[10px] font-black text-primary uppercase">View Modules</span>
+                                            <ChevronRightIcon className="w-4 h-4 text-primary group-hover:translate-x-1 transition-transform"/>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Right Sidebar: Today's Schedule & Quick Links */}
+                    <div className="lg:col-span-3 space-y-6 sticky top-24 hidden lg:block">
+                        <div className="bg-card rounded-[2rem] border border-border/60 p-6 shadow-sm overflow-hidden relative">
+                            <div className="absolute top-0 left-0 w-full h-1 bg-amber-500"></div>
+                            <h3 className="text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-6 flex items-center gap-2">
+                                <CalendarIcon className="w-4 h-4 text-amber-500"/> Today's Schedule
+                            </h3>
+                            <div className="space-y-4">
+                                {todaysClasses.length > 0 ? todaysClasses.map((cls, idx) => (
+                                    <div key={idx} className="flex gap-4 items-start group">
+                                        <div className="flex flex-col items-center">
+                                            <div className="text-[10px] font-black text-foreground">{cls.time.split(' ')[0]}</div>
+                                            <div className="w-px h-10 bg-border/50 my-1 group-last:hidden"></div>
+                                        </div>
+                                        <div className="flex-1">
+                                            <div className="text-[11px] font-black text-foreground line-clamp-1">{cls.subject}</div>
+                                            <div className="flex items-center gap-2 mt-0.5">
+                                                <span className="text-[9px] font-bold text-muted-foreground uppercase">Room {cls.room}</span>
+                                                <span className={`px-1.5 py-0.5 rounded text-[8px] font-black uppercase ${cls.type === 'practical' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-primary/10 text-primary'}`}>
+                                                    {cls.type}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )) : (
+                                    <div className="text-center py-6 opacity-40">
+                                        <CoffeeIcon className="w-8 h-8 mx-auto mb-2"/>
+                                        <p className="text-[10px] font-black uppercase tracking-widest">No classes today</p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="bg-card rounded-[2rem] border border-border/60 p-6 shadow-sm">
+                            <h3 className="text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-6 flex items-center gap-2">
+                                <SparkleIcon className="w-4 h-4 text-primary"/> Resources
+                            </h3>
+                            <div className="space-y-3">
+                                {[
+                                    { label: 'E-Library', icon: BookOpenIcon, path: '#' },
+                                    { label: 'Examination', icon: FileTextIcon, path: '#' },
+                                    { label: 'Fee Portal', icon: LayoutGridIcon, path: '#' },
+                                    { label: 'Academic Calendar', icon: CalendarIcon, path: '#' }
+                                ].map((link, i) => (
+                                    <button key={i} className="w-full flex items-center justify-between p-3 rounded-xl border border-border/50 hover:bg-muted/50 transition-all group">
+                                        <div className="flex items-center gap-3">
+                                            <link.icon className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors"/>
+                                            <span className="text-[10px] font-black uppercase tracking-widest text-foreground/80">{link.label}</span>
+                                        </div>
+                                        <ChevronRightIcon className="w-3.5 h-3.5 text-muted-foreground/30 group-hover:translate-x-1 transition-all"/>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="px-6 text-center space-y-4 pt-4">
+                            <div className="flex flex-wrap justify-center gap-x-4 gap-y-2 text-[9px] font-black text-muted-foreground/30 uppercase tracking-widest">
+                                <a href="#" className="hover:text-primary transition-colors">Help Center</a>
+                                <a href="#" className="hover:text-primary transition-colors">Contact Support</a>
+                            </div>
+                            <p className="text-[9px] font-black text-muted-foreground/20 uppercase tracking-[0.3em]">
+                                LUMINA ACADEMIC v2.0
+                            </p>
+                        </div>
+                    </div>
                 </div>
-             </div>
-             <BottomNavBar currentUser={currentUser} onNavigate={onNavigate} currentPage={currentPath}/>
+            </main>
+
+            <BottomNavBar currentUser={currentUser} onNavigate={onNavigate} currentPage={currentPath}/>
         </div>
     );
 };
