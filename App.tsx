@@ -768,7 +768,28 @@ function App() {
       case '#/notifications':
           return <NotificationsPage currentUser={activeUser} notices={notices} courses={courses} colleges={colleges} users={users} onNavigate={handleNavigate} currentPath={currentPath} onCreateNotice={(data: any) => handleCreate('notices', { ...data, authorId: activeUser.id, collegeId: activeUser.collegeId, timestamp: Date.now() })} onDeleteNotice={(id: string) => handleDelete('notices', id)} onMarkAsRead={handleMarkNoticeAsRead} />;
       default:
-          if (path.startsWith('#/profile/')) { const uid = path.split('/')[2]; return <ProfilePage profileUserId={uid} currentUser={activeUser} users={users} posts={posts} groups={groups} colleges={colleges} courses={courses} onNavigate={handleNavigate} currentPath={currentPath} onAddPost={(d) => handleCreate('posts', {...d, authorId: activeUser.id, collegeId: activeUser.collegeId, timestamp: Date.now()})} onAddAchievement={(a) => handleUpdate('users', activeUser.id, { achievements: FieldValue.arrayUnion(a) })} onAddInterest={(i) => handleUpdate('users', activeUser.id, { interests: FieldValue.arrayUnion(i) })} onUpdateProfile={async (d, f) => { if (!activeUser) return; let updateData: any = { ...d }; if (f) { try { const avatarUrl = await uploadToCloudinary(f); updateData.avatarUrl = avatarUrl; } catch (err) { console.error("Avatar upload failed", err); } } await handleUpdate('users', activeUser.id, updateData); }} {...commonFeedProps} />; }
+          if (path.startsWith('#/profile/')) { const uid = path.split('/')[2]; return <ProfilePage profileUserId={uid} currentUser={activeUser} users={users} posts={posts} groups={groups} colleges={colleges} courses={courses} onNavigate={handleNavigate} currentPath={currentPath} onAddPost={(d) => handleCreate('posts', {...d, authorId: activeUser.id, collegeId: activeUser.collegeId, timestamp: Date.now()})} onAddAchievement={(a) => handleUpdate('users', activeUser.id, { achievements: FieldValue.arrayUnion(a) })} onAddInterest={(i) => handleUpdate('users', activeUser.id, { interests: FieldValue.arrayUnion(i) })} onUpdateProfile={async (d, f) => {
+            if (!activeUser) return;
+            let updateData: any = { ...d };
+            if (f) {
+                try {
+                    // Use the more robust storage ref from api.ts
+                    const uploadTask = await storage.ref(`avatars/${activeUser.id}`).put(f);
+                    const avatarUrl = await uploadTask.ref.getDownloadURL();
+                    updateData.avatarUrl = avatarUrl;
+                } catch (err) {
+                    console.error("Avatar upload failed", err);
+                }
+            }
+
+            // Optimistic update
+            setRegisteredUsers(prev => ({
+                ...prev,
+                [activeUser.id]: { ...prev[activeUser.id], ...updateData }
+            }));
+
+            await handleUpdate('users', activeUser.id, updateData);
+          }} {...commonFeedProps} />; }
           
           if (path.startsWith('#/groups/')) { 
               const gid = path.split('/')[2]; 
