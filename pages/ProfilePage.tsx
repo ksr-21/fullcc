@@ -145,12 +145,18 @@ const ProfilePage: React.FC<ProfilePageProps> = (props) => {
     }, [posts, currentUser.savedPosts, isOwnProfile]);
 
     const academicStats = useMemo(() => {
-        if (!profileUser) return null;
-        const enrolledCourses = courses.filter(c => c.students?.includes(profileUser.id));
+        if (!profileUser || profileUser.tag !== 'Student') return null;
+
+        // Fetch courses based on Department, Year, and Division for holistic attendance
+        const relevantCourses = courses.filter(c =>
+            c.department === profileUser.department &&
+            Number(c.year) === Number(profileUser.yearOfStudy) &&
+            (!c.division || c.division === profileUser.division)
+        );
         
         let totalClasses = 0;
         let presentClasses = 0;
-        enrolledCourses.forEach(c => {
+        relevantCourses.forEach(c => {
             c.attendanceRecords?.forEach(r => {
                 if (r.records[profileUser.id]) {
                     totalClasses++;
@@ -161,9 +167,9 @@ const ProfilePage: React.FC<ProfilePageProps> = (props) => {
         
         const attendance = totalClasses > 0 ? Math.round((presentClasses / totalClasses) * 100) : 0;
         return {
-            enrolled: enrolledCourses.length,
+            enrolled: relevantCourses.length,
             attendance: attendance,
-            assignments: enrolledCourses.reduce((acc, c) => acc + (c.assignments?.length || 0), 0)
+            assignments: relevantCourses.reduce((acc, c) => acc + (c.assignments?.length || 0), 0)
         };
     }, [courses, profileUser]);
 
@@ -411,7 +417,7 @@ const ProfilePage: React.FC<ProfilePageProps> = (props) => {
                                             </div>
                                         </div>
 
-                                        {(isOwnProfile || isFacultyView) && profileUser.tag === 'Student' && (
+                                        {(isOwnProfile || isFacultyView) && profileUser.tag === 'Student' && academicStats && (
                                             <div className="bg-card p-6 rounded-[2rem] border border-border/60 shadow-sm md:col-span-2">
                                                 <h3 className="text-[10px] font-black uppercase text-muted-foreground tracking-[0.2em] mb-6 flex items-center gap-2">
                                                     <ChartBarIcon className="w-4 h-4 text-emerald-500"/> Academic Performance
@@ -419,11 +425,11 @@ const ProfilePage: React.FC<ProfilePageProps> = (props) => {
                                                 <div className="grid grid-cols-2 gap-4">
                                                     <div className="bg-muted/20 p-5 rounded-2xl border border-border/50 group/stat hover:border-primary/30 transition-all">
                                                         <p className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-2 group-hover:text-primary transition-colors">Total Attendance</p>
-                                                        <p className="text-3xl font-black text-foreground tracking-tighter">{academicStats?.attendance}%</p>
+                                                        <p className="text-3xl font-black text-foreground tracking-tighter">{academicStats.attendance}%</p>
                                                     </div>
                                                     <div className="bg-muted/20 p-5 rounded-2xl border border-border/50 group/stat hover:border-secondary/30 transition-all">
                                                         <p className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-2 group-hover:text-secondary transition-colors">Active Assignments</p>
-                                                        <p className="text-3xl font-black text-foreground tracking-tighter">{academicStats?.assignments}</p>
+                                                        <p className="text-3xl font-black text-foreground tracking-tighter">{academicStats.assignments}</p>
                                                     </div>
                                                 </div>
                                             </div>
